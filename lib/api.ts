@@ -1,8 +1,3 @@
-/**
- * Standardized API Service for WhisperBox
- * Handles all backend communication with type safety and error reporting.
- */
-
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://whisperbox.koyeb.app";
 
 const apiFetch = async (path: string, opts: RequestInit = {}, token: string | null = null) => {
@@ -57,4 +52,4 @@ export const ApiService = {
     
   sendMessage: (data: any, token: string | null) => 
     apiFetch("/messages", { method: "POST", body: JSON.stringify(data) }, token),
-};
+};

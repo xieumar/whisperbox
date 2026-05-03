@@ -1,8 +1,3 @@
-/**
- * Standardized Crypto Service for WhisperBox
- * Handles E2EE operations: Key generation, wrapping, encryption, and decryption.
- */
-
 export const base64Encode = (buf: ArrayBuffer): string => {
   const bytes = new Uint8Array(buf);
   let s = "";
@@ -176,4 +171,4 @@ export const CryptoService = {
     
     return new TextDecoder().decode(plaintext);
   },
-};
+};
