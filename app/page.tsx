@@ -4,10 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import { AuthScreen } from "@/components/auth/auth-screen";
 import { Sidebar } from "@/components/chat/sidebar";
 import { ChatArea } from "@/components/chat/chat-area";
+import { SplashScreen } from "@/components/auth/splash-screen";
 import { useAuth } from "@/hooks/use-auth";
 import { useChat } from "@/hooks/use-chat";
 
 export default function WhisperBox() {
+  const [phase, setPhase] = useState<"splash" | "auth" | "app">("splash");
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [searchQ, setSearchQ] = useState("");
   const [showSearch, setShowSearch] = useState(false);
@@ -19,7 +21,7 @@ export default function WhisperBox() {
   const {
     user,
     accessToken,
-    phase,
+    phase: authPhase,
     loading: authLoading,
     error: authError,
     privateKey,
@@ -42,6 +44,13 @@ export default function WhisperBox() {
     sendMessage,
     setSearchResults,
   } = useChat({ user, accessToken, privateKey, publicKey });
+
+  // Sync auth phase with UI phase
+  useEffect(() => {
+    if (authPhase === "app") {
+      setPhase("app");
+    }
+  }, [authPhase]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -79,7 +88,22 @@ export default function WhisperBox() {
     await sendMessage(text);
   };
 
-  if (phase === "auth") {
+  if (phase === "splash") {
+    return (
+      <SplashScreen
+        onGetStarted={() => {
+          setAuthMode("register");
+          setPhase("auth");
+        }}
+        onRestore={() => {
+          setAuthMode("login");
+          setPhase("auth");
+        }}
+      />
+    );
+  }
+
+  if (authPhase === "auth") {
     return (
       <AuthScreen
         mode={authMode}
@@ -93,7 +117,7 @@ export default function WhisperBox() {
   }
 
   return (
-    <div className="flex h-screen bg-[#060c19] text-[#dde8f5] font-sans overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground font-sans overflow-hidden">
       <Sidebar
         user={user}
         wsStatus={wsStatus}
