@@ -61,29 +61,50 @@ export const CryptoService = {
         hash: "SHA-256",
       },
       keyMaterial,
-      { name: "AES-KW", length: 256 },
+      { name: "AES-GCM", length: 256 },
       false,
-      ["wrapKey", "unwrapKey"]
+      ["encrypt", "decrypt"]
     );
   },
 
   /**
    * Wraps a private key using a wrapping key.
+   * Uses AES-GCM and returns "iv:ciphertext" in base64.
    */
   async wrapPrivateKey(pk: CryptoKey, wk: CryptoKey): Promise<string> {
-    const wrapped = await crypto.subtle.wrapKey("pkcs8", pk, wk, "AES-KW");
-    return base64Encode(wrapped);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const exported = await crypto.subtle.exportKey("pkcs8", pk);
+    const ciphertext = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv },
+      wk,
+      exported
+    );
+    
+    return `${base64Encode(iv.buffer)}:${base64Encode(ciphertext)}`;
   },
 
   /**
    * Unwraps a private key using a wrapping key.
    */
   async unwrapPrivateKey(data: string, wk: CryptoKey): Promise<CryptoKey> {
-    return crypto.subtle.unwrapKey(
-      "pkcs8",
-      base64Decode(data),
+    const [ivB64, ctB64] = data.split(":");
+    if (!ctB64) {
+      // Fallback for old AES-KW format if any exist (though unlikely here)
+      throw new Error("Invalid wrapped key format");
+    }
+
+    const iv = base64Decode(ivB64);
+    const ciphertext = base64Decode(ctB64);
+    
+    const decrypted = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: new Uint8Array(iv) },
       wk,
-      { name: "AES-KW" },
+      ciphertext
+    );
+    
+    return crypto.subtle.importKey(
+      "pkcs8",
+      decrypted,
       { name: "RSA-OAEP", hash: "SHA-256" },
       false,
       ["decrypt"]

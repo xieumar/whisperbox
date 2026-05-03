@@ -81,10 +81,21 @@ export function useAuth() {
     setLoading(true);
     setError("");
     try {
-      const password = formData.get("password") as string;
-      const username = formData.get("username") as string;
-      const displayName = formData.get("display_name") as string;
+      const username = (formData.get("username")?.toString() || "").trim();
+      const displayName = (formData.get("display_name")?.toString() || "").trim();
+      const password = (formData.get("password")?.toString() || "");
 
+      const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+
+      if (!username || username.length < 3) {
+        throw new Error("Username must be at least 3 characters long");
+      }
+      if (!usernameRegex.test(username)) {
+        throw new Error(`Username "${username}" may only contain letters, digits, _ and -`);
+      }
+      if (!displayName || displayName.length < 1) {
+        throw new Error("Display Name is required");
+      }
       if (!password || password.length < 8) {
         throw new Error("Password must be at least 8 characters long");
       }
@@ -124,7 +135,7 @@ export function useAuth() {
     setLoading(true);
     setError("");
     try {
-      const username = formData.get("username") as string;
+      const username = (formData.get("username") as string || "").trim();
       const password = formData.get("password") as string;
 
       // 1. Authenticate with Backend

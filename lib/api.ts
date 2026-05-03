@@ -17,8 +17,20 @@ const apiFetch = async (path: string, opts: RequestInit = {}, token: string | nu
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
+    
+    // Handle FastAPI style validation errors (422)
+    if (response.status === 422 && Array.isArray(errorData.detail)) {
+      const detail = errorData.detail[0];
+      const field = detail.loc?.[detail.loc.length - 1] || "field";
+      const message = detail.msg || "validation error";
+      throw new Error(`Validation Error (${field}): ${message}`);
+    }
+
     // Try to extract detail, error, or message from the response
-    const errorMessage = errorData.detail || errorData.error || errorData.message || `Server error ${response.status}`;
+    const errorMessage = typeof errorData.detail === 'string' 
+      ? errorData.detail 
+      : errorData.error || errorData.message || `Server error ${response.status}`;
+      
     throw new Error(errorMessage);
   }
 
