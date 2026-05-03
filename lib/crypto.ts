@@ -1,78 +1,179 @@
-export const b64e = (buf: ArrayBuffer): string => {
-    const bytes = new Uint8Array(buf);
-    let s = "";
-    for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
-    return btoa(s);
+/**
+ * Standardized Crypto Service for WhisperBox
+ * Handles E2EE operations: Key generation, wrapping, encryption, and decryption.
+ */
+
+export const base64Encode = (buf: ArrayBuffer): string => {
+  const bytes = new Uint8Array(buf);
+  let s = "";
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
 };
 
-export const b64d = (s: string): ArrayBuffer => {
-    const raw = atob(s);
-    const buf = new Uint8Array(raw.length);
-    for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
-    return buf.buffer;
+export const base64Decode = (s: string): ArrayBuffer => {
+  const raw = atob(s);
+  const buf = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
+  return buf.buffer;
 };
 
-export const CE = {
-    genKP: () =>
-        crypto.subtle.generateKey(
-            { name: "RSA-OAEP", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
-            true,
-            ["encrypt", "decrypt"]
-        ),
+export interface EncryptedPayload {
+  ciphertext: string;
+  iv: string;
+  encryptedKey: string;
+  encryptedKeyForSelf: string;
+}
 
-    genSalt: () => crypto.getRandomValues(new Uint8Array(16)),
+export const CryptoService = {
+  /**
+   * Generates a new RSA-OAEP key pair for E2EE.
+   */
+  generateKeyPair: async (): Promise<CryptoKeyPair> => {
+    return crypto.subtle.generateKey(
+      {
+        name: "RSA-OAEP",
+        modulusLength: 2048,
+        publicExponent: new Uint8Array([1, 0, 1]),
+        hash: "SHA-256",
+      },
+      true,
+      ["encrypt", "decrypt"]
+    );
+  },
 
-    async deriveWK(password: string, salt: ArrayBuffer | string) {
-        const km = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
-        return crypto.subtle.deriveKey(
-            { name: "PBKDF2", salt: typeof salt === "string" ? b64d(salt) : salt, iterations: 100000, hash: "SHA-256" },
-            km,
-            { name: "AES-KW", length: 256 },
-            false,
-            ["wrapKey", "unwrapKey"]
-        );
-    },
+  /**
+   * Generates a random 16-byte salt for PBKDF2.
+   */
+  generateSalt: (): Uint8Array => crypto.getRandomValues(new Uint8Array(16)),
 
-    async wrapPK(pk: CryptoKey, wk: CryptoKey) { return b64e(await crypto.subtle.wrapKey("pkcs8", pk, wk, "AES-KW")); },
+  /**
+   * Derives a Wrapping Key (WK) from a password and salt.
+   */
+  async deriveWrappingKey(password: string, salt: ArrayBuffer | string): Promise<CryptoKey> {
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(password),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    );
+    
+    return crypto.subtle.deriveKey(
+      {
+        name: "PBKDF2",
+        salt: typeof salt === "string" ? base64Decode(salt) : salt,
+        iterations: 100000,
+        hash: "SHA-256",
+      },
+      keyMaterial,
+      { name: "AES-KW", length: 256 },
+      false,
+      ["wrapKey", "unwrapKey"]
+    );
+  },
 
-    async unwrapPK(data: string, wk: CryptoKey) {
-        return crypto.subtle.unwrapKey(
-            "pkcs8", b64d(data), wk,
-            { name: "AES-KW" },
-            { name: "RSA-OAEP", hash: "SHA-256" },
-            false,
-            ["decrypt"]
-        );
-    },
+  /**
+   * Wraps a private key using a wrapping key.
+   */
+  async wrapPrivateKey(pk: CryptoKey, wk: CryptoKey): Promise<string> {
+    const wrapped = await crypto.subtle.wrapKey("pkcs8", pk, wk, "AES-KW");
+    return base64Encode(wrapped);
+  },
 
-    async exportPub(k: CryptoKey) { return b64e(await crypto.subtle.exportKey("spki", k)); },
-    async importPub(s: string) {
-        return crypto.subtle.importKey("spki", b64d(s), { name: "RSA-OAEP", hash: "SHA-256" }, false, ["encrypt"]);
-    },
+  /**
+   * Unwraps a private key using a wrapping key.
+   */
+  async unwrapPrivateKey(data: string, wk: CryptoKey): Promise<CryptoKey> {
+    return crypto.subtle.unwrapKey(
+      "pkcs8",
+      base64Decode(data),
+      wk,
+      { name: "AES-KW" },
+      { name: "RSA-OAEP", hash: "SHA-256" },
+      false,
+      ["decrypt"]
+    );
+  },
 
-    async encrypt(text: string, rPub: CryptoKey, sPub: CryptoKey) {
-        const aes = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
-        const iv = crypto.getRandomValues(new Uint8Array(12));
-        const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aes, new TextEncoder().encode(text));
-        const raw = await crypto.subtle.exportKey("raw", aes);
-        const [ek, eks] = await Promise.all([
-            crypto.subtle.encrypt({ name: "RSA-OAEP" }, rPub, raw),
-            crypto.subtle.encrypt({ name: "RSA-OAEP" }, sPub, raw),
-        ]);
-        return {
-            ciphertext: b64e(ct),
-            iv: b64e(iv.buffer),
-            encryptedKey: b64e(ek),
-            encryptedKeyForSelf: b64e(eks)
-        };
-    },
+  /**
+   * Exports a public key to SPKI base64 format.
+   */
+  async exportPublicKey(k: CryptoKey): Promise<string> {
+    const exported = await crypto.subtle.exportKey("spki", k);
+    return base64Encode(exported);
+  },
 
-    async decrypt(payload: any, priv: CryptoKey, isMine: boolean) {
-        const ek = isMine ? payload.encryptedKeyForSelf : payload.encryptedKey;
-        if (!ek) throw new Error("No decryption key in payload");
-        const raw = await crypto.subtle.decrypt({ name: "RSA-OAEP" }, priv, b64d(ek));
-        const aes = await crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["decrypt"]);
-        const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64d(payload.iv) }, aes, b64d(payload.ciphertext));
-        return new TextDecoder().decode(pt);
-    },
-};
+  /**
+   * Imports a public key from SPKI base64 format.
+   */
+  async importPublicKey(s: string): Promise<CryptoKey> {
+    return crypto.subtle.importKey(
+      "spki",
+      base64Decode(s),
+      { name: "RSA-OAEP", hash: "SHA-256" },
+      false,
+      ["encrypt"]
+    );
+  },
+
+  /**
+   * Encrypts text for a recipient and oneself (for message history).
+   */
+  async encrypt(text: string, recipientPublicKey: CryptoKey, senderPublicKey: CryptoKey): Promise<EncryptedPayload> {
+    const aesKey = await crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 256 },
+      true,
+      ["encrypt", "decrypt"]
+    );
+    
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ciphertext = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv },
+      aesKey,
+      new TextEncoder().encode(text)
+    );
+    
+    const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
+    const [encryptedKey, encryptedKeyForSelf] = await Promise.all([
+      crypto.subtle.encrypt({ name: "RSA-OAEP" }, recipientPublicKey, rawAesKey),
+      crypto.subtle.encrypt({ name: "RSA-OAEP" }, senderPublicKey, rawAesKey),
+    ]);
+
+    return {
+      ciphertext: base64Encode(ciphertext),
+      iv: base64Encode(iv.buffer),
+      encryptedKey: base64Encode(encryptedKey),
+      encryptedKeyForSelf: base64Encode(encryptedKeyForSelf),
+    };
+  },
+
+  /**
+   * Decrypts a payload using the private key.
+   */
+  async decrypt(payload: any, privateKey: CryptoKey, isMine: boolean): Promise<string> {
+    const encryptedKey = isMine ? payload.encryptedKeyForSelf : payload.encryptedKey;
+    if (!encryptedKey) throw new Error("No decryption key in payload");
+
+    const rawAesKey = await crypto.subtle.decrypt(
+      { name: "RSA-OAEP" },
+      privateKey,
+      base64Decode(encryptedKey)
+    );
+    
+    const aesKey = await crypto.subtle.importKey(
+      "raw",
+      rawAesKey,
+      { name: "AES-GCM" },
+      false,
+      ["decrypt"]
+    );
+    
+    const plaintext = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: base64Decode(payload.iv) },
+      aesKey,
+      base64Decode(payload.ciphertext)
+    );
+    
+    return new TextDecoder().decode(plaintext);
+  },
+};
