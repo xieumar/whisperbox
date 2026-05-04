@@ -1,4 +1,6 @@
-import { Lock, Shield, Loader2, CheckCheck, Clock, AlertCircle, Send } from "lucide-react";
+"use client";
+
+import { Lock, Shield, Loader2, CheckCheck, Clock, AlertCircle, Send, Terminal } from "lucide-react";
 import { Conversation, Message } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
 import { cn, fmtTime, fmtDate } from "@/lib/utils";
@@ -20,17 +22,27 @@ export function ChatArea(props: ChatAreaProps) {
 
   if (!activeConvo) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-4 text-slate-500">
-        <div className="w-18 h-18 bg-[#0b1628] rounded-2xl flex items-center justify-center border border-[#0c1e36] shadow-2xl">
-          <Lock size={30} className="text-blue-600" />
+      <div className="flex-1 flex flex-col items-center justify-center p-6 bg-background relative overflow-hidden">
+        {/* Subtle operative grid background or concentric circles */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-[0.01] pointer-events-none">
+          <div className="absolute w-[400px] h-[400px] border border-foreground rounded-full" />
+          <div className="absolute w-[600px] h-[600px] border border-foreground rounded-full" />
         </div>
-        <div className="text-center">
-          <h2 className="m-0 mb-1.5 text-xl font-bold text-slate-400">WhisperBox</h2>
-          <p className="m-0 text-[13px] max-w-[270px] leading-relaxed">Select a conversation from the sidebar, or search for users to start a new secure chat.</p>
-        </div>
-        <div className="flex items-center gap-1.5 bg-green-500/5 border border-green-500/10 rounded-lg py-1.5 px-3">
-          <Shield size={12} className="text-green-500" />
-          <span className="text-[11px] text-green-500">All messages are end-to-end encrypted</span>
+
+        <div className="z-10 flex flex-col items-center gap-8 max-w-[320px] text-center">
+          <div className="w-20 h-20 bg-secondary/20 rounded-[2rem] flex items-center justify-center border border-white/5 shadow-2xl">
+            <Shield size={40} className="text-muted-foreground/30" />
+          </div>
+          <div className="space-y-3">
+            <h2 className="text-sm font-bold uppercase tracking-[0.3em] text-muted-foreground">Secure Session Inactive</h2>
+            <p className="text-[11px] text-muted-foreground/40 leading-relaxed uppercase tracking-wider">
+              Select an authorized identity from the registry to initialize an end-to-end encrypted channel.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 bg-secondary/30 border border-white/5 rounded-full py-2 px-4">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="text-[9px] text-emerald-500/80 font-bold uppercase tracking-widest">Protocol: AES-GCM Ready</span>
+          </div>
         </div>
       </div>
     );
@@ -52,32 +64,42 @@ export function ChatArea(props: ChatAreaProps) {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0">
-      <div className="p-3 px-5 border-b border-[#0c1e36] flex items-center gap-3 bg-[#0b1628]">
-        <Avatar name={activeConvo.display_name} size={38} />
-        <div className="flex-1 min-w-0">
-          <div className="font-bold text-[15px] text-[#eaf2ff] mb-0.5">{activeConvo.display_name}</div>
-          <div className="text-[11px] text-emerald-500 flex items-center gap-1">
-            <Lock size={9} className="stroke-[2.5]" /> End-to-end encrypted
+    <div className="flex-1 flex flex-col min-w-0 bg-background relative">
+      {/* Header */}
+      <div className="h-16 px-6 border-b border-white/5 flex items-center justify-between z-10 bg-background/50 backdrop-blur-xl">
+        <div className="flex items-center gap-4">
+          <Avatar name={activeConvo.display_name} size={32} />
+          <div className="min-w-0">
+            <div className="font-bold text-[13px] uppercase tracking-wider">{activeConvo.display_name}</div>
+            <div className="text-[10px] text-emerald-500/60 flex items-center gap-1.5 font-medium uppercase tracking-widest">
+              <div className="w-1 h-1 bg-emerald-500 rounded-full" /> Authorized Identity
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 rounded-md py-1 px-2.5">
-          <Shield size={11} className="text-green-500" />
-          <span className="text-[10px] text-green-500 font-semibold tracking-wider">ENCRYPTED</span>
+        
+        <div className="hidden sm:flex items-center gap-3">
+          <div className="flex flex-col items-end">
+            <span className="text-[9px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em]">Session Hash</span>
+            <span className="text-[10px] font-mono text-muted-foreground/20">VLT-7729-001X</span>
+          </div>
+          <div className="w-8 h-8 rounded-lg bg-secondary/30 flex items-center justify-center border border-white/5">
+            <Terminal size={14} className="text-muted-foreground/30" />
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3.5 px-5 flex flex-col custom-scrollbar">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-2 custom-scrollbar">
         {msgLoading ? (
-          <div className="flex-1 flex items-center justify-center"><Loader2 size={24} className="text-slate-600 animate-spin" /></div>
+          <div className="flex-1 h-full flex items-center justify-center">
+            <Loader2 size={24} className="text-muted-foreground/10 animate-spin" />
+          </div>
         ) : grouped.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3">
-            <div className="w-14 h-14 bg-[#0b1628] rounded-2xl flex items-center justify-center border border-[#0c1e36]">
-              <Lock size={24} className="text-blue-600" />
-            </div>
-            <div className="text-center">
-              <div className="text-sm font-semibold text-slate-400 mb-1">Conversation is encrypted</div>
-              <div className="text-xs text-slate-500">Say hello to {activeConvo.display_name} 👋</div>
+          <div className="flex-1 h-full flex flex-col items-center justify-center space-y-6 opacity-20">
+            <Lock size={40} className="stroke-[1]" />
+            <div className="text-center space-y-1">
+              <div className="text-[10px] font-bold uppercase tracking-[0.3em]">Channel Encrypted</div>
+              <div className="text-[9px] uppercase tracking-widest">Zero knowledge persistent</div>
             </div>
           </div>
         ) : (
@@ -85,8 +107,10 @@ export function ChatArea(props: ChatAreaProps) {
             {grouped.map((item) => {
               if (item.type === "date") {
                 return (
-                  <div key={item.key} className="text-center my-2.5">
-                    <span className="text-[11px] text-slate-400 bg-[#0b1628] px-3 py-1 rounded-full font-medium">{item.label}</span>
+                  <div key={item.key} className="flex items-center gap-4 my-8">
+                    <div className="flex-1 h-[1px] bg-white/5" />
+                    <span className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-[0.3em]">{item.label}</span>
+                    <div className="flex-1 h-[1px] bg-white/5" />
                   </div>
                 );
               }
@@ -95,36 +119,36 @@ export function ChatArea(props: ChatAreaProps) {
               const isMine = msg.isMine;
 
               return (
-                <div key={item.key} className={cn("flex", isMine ? "justify-end" : "justify-start", isLast ? "mb-2" : "mb-0.5")}>
+                <div key={item.key} className={cn("flex group", isMine ? "justify-end" : "justify-start", isLast ? "mb-4" : "mb-0.5")}>
                   {!isMine && (
-                    <div className="w-6.5 mr-2 self-end mb-0.5 shrink-0">
+                    <div className="w-8 mr-3 self-end mb-1 shrink-0">
                       {isLast && <Avatar name={activeConvo.display_name} size={24} />}
                     </div>
                   )}
-                  <div className="max-w-[66%]">
+                  <div className={cn("max-w-[75%] lg:max-w-[60%]", isMine ? "items-end" : "items-start", "flex flex-col")}>
                     <div
                       className={cn(
-                        "px-3.5 py-2 text-sm leading-relaxed break-words shadow-sm transition-opacity",
+                        "px-4 py-3 text-[13px] leading-relaxed break-words transition-all border",
                         isMine
                           ? msg.status === "error"
-                            ? "bg-red-950/50 text-red-300 border border-red-500/40"
-                            : "bg-gradient-to-br from-blue-700 to-blue-600 text-[#dde8f5] shadow-blue-700/20"
-                          : "bg-[#0f1e33] text-[#dde8f5]",
+                            ? "bg-destructive/10 text-destructive border-destructive/20"
+                            : "bg-secondary text-foreground border-white/5"
+                          : "bg-secondary/30 text-foreground border-white/5",
                         isMine
-                          ? isFirst && isLast ? "rounded-[16px_4px_16px_16px]" : isFirst ? "rounded-[16px_4px_4px_16px]" : isLast ? "rounded-[4px_4px_16px_16px]" : "rounded-[4px]"
-                          : isFirst && isLast ? "rounded-[4px_16px_16px_16px]" : isFirst ? "rounded-[4px_16px_4px_4px]" : isLast ? "rounded-[4px_4px_16px_16px]" : "rounded-[4px]",
-                        msg.status === "sending" && "opacity-60"
+                          ? "rounded-2xl rounded-tr-sm"
+                          : "rounded-2xl rounded-tl-sm",
+                        msg.status === "sending" && "opacity-40 scale-[0.98]"
                       )}
                     >
                       {msg.text}
                     </div>
                     {isLast && (
-                      <div className={cn("flex items-center gap-1 mt-1 px-1", isMine ? "justify-end" : "justify-start")}>
-                        <span className="text-[10px] text-slate-500">{fmtTime(msg.sentAt)}</span>
+                      <div className={cn("flex items-center gap-2 mt-1.5 px-1", isMine ? "justify-end" : "justify-start")}>
+                        <span className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-tighter">{fmtTime(msg.sentAt)}</span>
                         {isMine && (
-                          msg.status === "sending" ? <Clock size={10} className="text-slate-500" /> :
-                          msg.status === "error" ? <AlertCircle size={10} className="text-red-500" /> :
-                          <CheckCheck size={10} className="text-blue-500" />
+                          msg.status === "sending" ? <Clock size={10} className="text-muted-foreground/20" /> :
+                          msg.status === "error" ? <AlertCircle size={10} className="text-destructive" /> :
+                          <CheckCheck size={11} className="text-foreground/20" />
                         )}
                       </div>
                     )}
@@ -137,28 +161,28 @@ export function ChatArea(props: ChatAreaProps) {
         )}
       </div>
 
-      <div className="p-2.5 px-4 pb-3.5 border-t border-[#0c1e36] bg-[#0b1628]">
-        <div className="flex items-end gap-2 bg-[#09111e] rounded-xl p-2 pl-4 border border-[#0f2040] focus-within:border-blue-700 transition-colors">
+      <div className="p-6 pt-2">
+        <div className="relative flex items-end gap-2 bg-secondary/30 rounded-2xl border border-white/5 p-2 focus-within:border-white/10 transition-all">
           <textarea
             ref={inputRef} value={input}
-            onChange={(e) => { setInput(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 110) + "px"; }}
+            onChange={(e) => { setInput(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 160) + "px"; }}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-            placeholder="Message…" rows={1}
-            className="flex-1 bg-transparent border-none text-[#dde8f5] text-sm resize-none font-sans leading-relaxed max-h-[110px] min-h-[22px] overflow-y-auto p-0 outline-none placeholder:text-slate-600 custom-scrollbar"
+            placeholder="Authorized input only..." rows={1}
+            className="flex-1 bg-transparent border-none text-foreground text-[13px] resize-none leading-relaxed max-h-[160px] min-h-[40px] overflow-y-auto px-4 py-3 outline-none placeholder:text-muted-foreground/20 custom-scrollbar"
           />
           <button
             onClick={handleSend} disabled={!input.trim() || sending}
             className={cn(
-              "w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all",
-              input.trim() ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/30 hover:scale-105" : "bg-[#0f1e33] text-slate-500 cursor-default"
+              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all",
+              input.trim() ? "bg-foreground text-background shadow-xl hover:scale-105" : "bg-white/5 text-muted-foreground/20 cursor-default"
             )}
           >
-            {sending ? <Loader2 size={15} className="animate-spin text-white" /> : <Send size={15} />}
+            {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
           </button>
         </div>
-        <div className="flex items-center justify-center gap-1 mt-1.5">
-          <Lock size={8} className="text-slate-600" />
-          <span className="text-[10px] text-slate-600">Messages are encrypted with AES-256-GCM before leaving your device</span>
+        <div className="flex items-center gap-2 mt-2 px-4 opacity-10">
+          <Shield size={10} />
+          <span className="text-[8px] font-bold uppercase tracking-[0.2em]">End-to-End Encryption Protocol Active</span>
         </div>
       </div>
     </div>
