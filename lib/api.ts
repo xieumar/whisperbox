@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://whisperbox.koyeb.app";
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://whisperbox.koyeb.app";
 
 const apiFetch = async (path: string, opts: RequestInit = {}, token: string | null = null) => {
   const headers: Record<string, string> = { 
@@ -38,6 +38,7 @@ const apiFetch = async (path: string, opts: RequestInit = {}, token: string | nu
 };
 
 export const ApiService = {
+  BASE_URL,
   register: (data: any) => 
     apiFetch("/auth/register", { method: "POST", body: JSON.stringify(data) }),
     

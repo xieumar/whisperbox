@@ -20,6 +20,7 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
   const [msgLoading, setMsgLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [sending, setSending] = useState(false);
   
   const wsRef = useRef<WebSocket | null>(null);
   const pkCache = useRef<Record<string, CryptoKey>>({});
@@ -51,7 +52,9 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
     if (wsRef.current) wsRef.current.close();
     setWsStatus("connecting");
     
-    const ws = new WebSocket(`wss://whisperbox.koyeb.app/ws?token=${token}`);
+    // Convert https to wss for the WebSocket connection
+    const wsUrl = (ApiService.BASE_URL || "https://whisperbox.koyeb.app").replace("http", "ws") + "/ws";
+    const ws = new WebSocket(`${wsUrl}?token=${token}`);
     wsRef.current = ws;
 
     ws.onopen = () => setWsStatus("connected");
@@ -180,6 +183,7 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
   const sendMessage = async (text: string) => {
     if (!text.trim() || !activeConvo || !user || !pubKeyRef.current) return;
     
+    setSending(true);
     const recipientId = activeConvo.user_id;
     const tempId = `tmp_${Date.now()}`;
     
@@ -231,6 +235,8 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
           m.id === tempId ? { ...m, status: "error" } : m
         )
       }));
+    } finally {
+      setSending(false);
     }
   };
 
@@ -246,5 +252,6 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
     searchUsers,
     sendMessage,
     setSearchResults,
+    sending,
   };
 }

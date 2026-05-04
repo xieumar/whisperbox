@@ -43,6 +43,7 @@ export default function WhisperBox() {
     searchUsers,
     sendMessage,
     setSearchResults,
+    sending,
   } = useChat({ user, accessToken, privateKey, publicKey });
 
   // Sync auth phase with UI phase
@@ -133,7 +134,7 @@ export default function WhisperBox() {
         input={input}
         setInput={setInput}
         handleSend={onSend}
-        sending={false} // Handled internally in hook
+        sending={sending}
         bottomRef={bottomRef}
         inputRef={inputRef}
       />
