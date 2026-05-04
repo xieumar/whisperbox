@@ -1,4 +1,11 @@
-import { Search, X, Loader2, MessageSquare, LogOut, Wifi, WifiOff, Shield, Lock } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { 
+  Search, X, Loader2, MessageSquare, LogOut, 
+  Wifi, WifiOff, Shield, Lock, Settings, User as UserIcon,
+  ChevronLeft, ChevronRight, Menu
+} from "lucide-react";
 import { User, Conversation, Message } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
 import { cn, fmtTime } from "@/lib/utils";
@@ -21,109 +28,234 @@ interface SidebarProps {
   selectConvo: (convo: Partial<Conversation> & { user_id: string }) => void;
 }
 
+type Tab = "chats" | "security" | "profile";
+
 export function Sidebar(props: SidebarProps) {
-  const { user, wsStatus, doLogout, searchQ, handleSearchChange, showSearch, setShowSearch, searching, searchResults, setSearchResults, setSearchQ, convos, activeId, messages, selectConvo } = props;
+  const { 
+    user, wsStatus, doLogout, searchQ, handleSearchChange, 
+    showSearch, setShowSearch, searching, searchResults, 
+    setSearchResults, setSearchQ, convos, activeId, 
+    messages, selectConvo 
+  } = props;
+
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("chats");
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const NavItem = ({ id, label, icon: Icon }: { id: Tab, label: string, icon: any }) => {
+    const isActive = activeTab === id;
+    return (
+      <button
+        onClick={() => setActiveTab(id)}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 group relative",
+          isActive ? "bg-white/5 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+          isCollapsed ? "justify-center" : "justify-start"
+        )}
+        title={isCollapsed ? label : undefined}
+      >
+        <Icon size={18} className={cn(isActive ? "opacity-100" : "opacity-40 group-hover:opacity-100")} />
+        {!isCollapsed && <span className="text-[11px] font-bold uppercase tracking-[0.15em]">{label}</span>}
+        {isActive && !isCollapsed && (
+          <div className="absolute left-0 w-1 h-4 bg-foreground rounded-r-full" />
+        )}
+      </button>
+    );
+  };
 
   return (
-    <div className="w-[300px] bg-[#0b1628] border-r border-[#0c1e36] flex flex-col shrink-0">
-      <div className="p-4 pb-3 border-b border-[#0c1e36]">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-900 to-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/30">
-              <Lock size={15} className="text-white stroke-[2.5]" />
+    <>
+      {/* Mobile Toggle */}
+      <button 
+        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        className="md:hidden fixed bottom-30 right-4 z-50 w-12 h-12 bg-foreground text-background rounded-full flex items-center justify-center shadow-2xl"
+      >
+        <Menu size={24} />
+      </button>
+
+      <div className={cn(
+        "fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden transition-opacity",
+        isMobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+      )} onClick={() => setIsMobileOpen(false)} />
+
+      <div className={cn(
+        "fixed md:relative inset-y-0 left-0 z-40 bg-background border-r border-white/5 flex flex-col transition-all duration-300 ease-in-out shrink-0",
+        isCollapsed ? "w-[80px]" : "w-[280px]",
+        isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      )}>
+        {/* Header */}
+        <div className="p-6 flex items-center justify-between">
+          {!isCollapsed && (
+            <div className="flex items-center gap-3">
+              <Shield size={20} className="text-foreground" />
+              <span className="text-sm font-light tracking-[0.2em] uppercase">Vault</span>
             </div>
-            <span className="font-extrabold text-base tracking-tight text-[#eaf2ff]">WhisperBox</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div title={`Connection: ${wsStatus}`} className="flex items-center">
-              {wsStatus === "connected" ? <Wifi size={14} className="text-green-500" />
-                : wsStatus === "connecting" ? <Loader2 size={14} className="text-amber-500 animate-spin" />
-                : <WifiOff size={14} className="text-red-500" />}
-            </div>
-            <button onClick={doLogout} title="Sign out" className="text-slate-400 hover:text-slate-300 hover:bg-slate-800/50 p-1.5 rounded-md transition-all">
-              <LogOut size={14} />
-            </button>
-          </div>
+          )}
+          {isCollapsed && <Shield size={20} className="mx-auto text-foreground" />}
+          
+          <button 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="hidden md:flex p-1.5 hover:bg-white/5 rounded-lg text-muted-foreground transition-colors"
+          >
+            {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          </button>
         </div>
 
-        <div className="relative group">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-focus-within:text-blue-500 transition-colors" />
-          <input
-            value={searchQ} onChange={(e) => handleSearchChange(e.target.value)} onFocus={() => setShowSearch(true)}
-            placeholder="Search users…"
-            className="w-full bg-[#09111e] border border-[#0c1e36] rounded-xl py-2 pl-8 pr-8 text-[#dde8f5] text-[13px] outline-none transition-all focus:border-blue-700 focus:bg-[#0c1628] placeholder:text-slate-600"
-          />
-          {searchQ && (
-            <button onClick={() => { setSearchQ(""); setSearchResults([]); setShowSearch(false); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
-              <X size={13} />
-            </button>
+        {/* Navigation Tabs */}
+        <div className="px-4 space-y-2 mb-6">
+          <NavItem id="chats" label="Chats" icon={MessageSquare} />
+          <NavItem id="security" label="Security" icon={Lock} />
+          <NavItem id="profile" label="Profile" icon={UserIcon} />
+        </div>
+
+        <div className="flex-1 flex flex-col min-h-0">
+          {activeTab === "chats" && (
+            <>
+              {/* Search */}
+              {!isCollapsed && (
+                <div className="px-4 mb-4">
+                  <div className="relative group">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/30 pointer-events-none transition-colors group-focus-within:text-foreground" />
+                    <input
+                      value={searchQ} onChange={(e) => handleSearchChange(e.target.value)} onFocus={() => setShowSearch(true)}
+                      placeholder="Search..."
+                      className="w-full bg-secondary/30 border border-white/5 rounded-xl py-2.5 pl-9 pr-8 text-foreground text-[12px] outline-none transition-all focus:border-white/10 placeholder:text-muted-foreground/20"
+                    />
+                    {searchQ && (
+                      <button onClick={() => { setSearchQ(""); setSearchResults([]); setShowSearch(false); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-foreground">
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Convos / Search Results */}
+              <div className="flex-1 overflow-y-auto px-2 space-y-1 custom-scrollbar">
+                {showSearch && searchQ ? (
+                  <>
+                    {!isCollapsed && <div className="px-4 py-2 text-[10px] text-muted-foreground font-bold tracking-[0.2em] uppercase">Found</div>}
+                    {searching ? (
+                      <div className="p-5 flex justify-center"><Loader2 size={18} className="text-muted-foreground/20 animate-spin" /></div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="p-4 text-center text-[11px] text-muted-foreground/50 uppercase tracking-widest">Zero Results</div>
+                    ) : (
+                      searchResults.map((u) => (
+                        <button 
+                          key={u.id} 
+                          onClick={() => { selectConvo({ user_id: u.id, username: u.username, display_name: u.display_name }); setIsMobileOpen(false); }} 
+                          className={cn(
+                            "w-full rounded-xl hover:bg-white/5 p-2 flex items-center gap-3 text-left transition-all group",
+                            isCollapsed ? "justify-center" : "px-3"
+                          )}
+                        >
+                          <Avatar name={u.display_name} size={isCollapsed ? 36 : 32} />
+                          {!isCollapsed && (
+                            <div className="min-w-0">
+                              <div className="font-bold text-[12px] uppercase tracking-wider">{u.display_name}</div>
+                              <div className="text-[10px] text-muted-foreground/50">@{u.username}</div>
+                            </div>
+                          )}
+                        </button>
+                      ))
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {!isCollapsed && <div className="px-4 py-2 text-[10px] text-muted-foreground font-bold tracking-[0.2em] uppercase">Messages</div>}
+                    {convos.length === 0 ? (
+                      !isCollapsed && (
+                        <div className="p-8 text-center text-muted-foreground/20 space-y-3">
+                          <MessageSquare size={32} className="mx-auto opacity-50" />
+                          <div className="text-[10px] font-bold uppercase tracking-[0.2em]">Void</div>
+                        </div>
+                      )
+                    ) : (
+                      convos.map((c) => {
+                        const isActive = activeId === c.user_id;
+                        const lastMsg = (messages[c.user_id] || []).slice(-1)[0];
+                        return (
+                          <div 
+                            key={c.user_id} 
+                            onClick={() => { selectConvo(c); setIsMobileOpen(false); }} 
+                            className={cn(
+                              "relative group rounded-xl p-2 flex items-center gap-3 cursor-pointer transition-all",
+                              isActive ? "bg-white/5" : "hover:bg-white/5",
+                              isCollapsed ? "justify-center" : "px-3"
+                            )}
+                          >
+                            <Avatar name={c.display_name} size={isCollapsed ? 40 : 36} />
+                            {!isCollapsed && (
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-baseline mb-0.5">
+                                  <span className={cn("font-bold text-[12px] uppercase tracking-wider", isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>{c.display_name}</span>
+                                  <span className="text-[9px] text-muted-foreground/30 font-medium">{fmtTime(c.last_message_at)}</span>
+                                </div>
+                                <div className="text-[11px] text-muted-foreground/50 truncate tracking-tight">
+                                  {lastMsg ? (lastMsg.isMine ? "OUT: " + lastMsg.text : "IN: " + lastMsg.text) : "READY"}
+                                </div>
+                              </div>
+                            )}
+                            {isActive && !isCollapsed && (
+                              <div className="absolute left-0 w-1 h-6 bg-foreground rounded-r-full" />
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </>
+                )}
+              </div>
+            </>
+          )}
+
+          {activeTab === "security" && (
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4">
+              <Lock size={32} className="opacity-10" />
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">E2EE Protocol Active</p>
+            </div>
+          )}
+
+          {activeTab === "profile" && (
+            <div className="flex-1 p-6 space-y-6">
+              <div className="flex flex-col items-center gap-4">
+                <Avatar name={user?.display_name} size={64} />
+                <div className="text-center">
+                  <h3 className="font-bold text-sm uppercase tracking-widest">{user?.display_name}</h3>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">@{user?.username}</p>
+                </div>
+              </div>
+            </div>
           )}
         </div>
-      </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {showSearch && searchQ ? (
-          <>
-            <div className="px-3.5 pt-2.5 pb-1 text-[10px] text-slate-500 font-bold tracking-widest uppercase">Find Users</div>
-            {searching ? (
-              <div className="p-5 flex justify-center"><Loader2 size={18} className="text-slate-500 animate-spin" /></div>
-            ) : searchResults.length === 0 ? (
-              <div className="p-4 text-center text-[13px] text-slate-500">No users found</div>
-            ) : (
-              searchResults.map((u) => (
-                <button key={u.id} onClick={() => selectConvo({ user_id: u.id, username: u.username, display_name: u.display_name })} className="w-full bg-transparent hover:bg-[#0b1c36] p-2.5 px-3.5 flex items-center gap-2.5 text-left text-[#dde8f5] transition-colors">
-                  <Avatar name={u.display_name} size={36} />
-                  <div>
-                    <div className="font-semibold text-[13px]">{u.display_name}</div>
-                    <div className="text-[11px] text-slate-400">@{u.username}</div>
-                  </div>
-                </button>
-              ))
-            )}
-          </>
-        ) : (
-          <>
-            <div className="px-3.5 pt-2.5 pb-1 text-[10px] text-slate-500 font-bold tracking-widest uppercase">Conversations</div>
-            {convos.length === 0 ? (
-              <div className="p-8 text-center text-slate-600">
-                <MessageSquare size={30} className="mx-auto mb-2.5" />
-                <div className="text-[13px] font-medium mb-1">No conversations yet</div>
-                <div className="text-xs">Search for users above to start chatting</div>
+        {/* Footer */}
+        <div className="p-4 mt-auto space-y-4">
+          <div className={cn(
+            "p-3 rounded-2xl bg-secondary/20 flex items-center gap-3 transition-all",
+            isCollapsed ? "justify-center" : ""
+          )}>
+            <div className="relative">
+              <Avatar name={user?.display_name} size={28} />
+              <div className={cn(
+                "absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background",
+                wsStatus === "connected" ? "bg-emerald-500" : wsStatus === "connecting" ? "bg-amber-500" : "bg-red-500"
+              )} />
+            </div>
+            {!isCollapsed && (
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] font-bold truncate uppercase tracking-widest">{user?.display_name}</div>
+                <div className="text-[9px] text-muted-foreground/50 uppercase font-medium">Session Active</div>
               </div>
-            ) : (
-              convos.map((c) => {
-                const isActive = activeId === c.user_id;
-                const lastMsg = (messages[c.user_id] || []).slice(-1)[0];
-                return (
-                  <div key={c.user_id} onClick={() => selectConvo(c)} className={cn("p-2.5 px-3.5 flex items-center gap-2.5 cursor-pointer transition-colors border-l-2", isActive ? "bg-[#0e2145] border-blue-600" : "hover:bg-[#0b1c36] border-transparent")}>
-                    <Avatar name={c.display_name} size={40} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline mb-0.5">
-                        <span className={cn("font-semibold text-[13.5px]", isActive ? "text-blue-300" : "text-[#dde8f5]")}>{c.display_name}</span>
-                        <span className="text-[10px] text-slate-500 shrink-0 ml-1">{fmtTime(c.last_message_at)}</span>
-                      </div>
-                      <div className="text-xs text-slate-400 truncate">
-                        {lastMsg ? (lastMsg.isMine ? "You: " + lastMsg.text : lastMsg.text) : "…"}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
             )}
-          </>
-        )}
-      </div>
-
-      <div className="p-2.5 px-3.5 border-t border-[#0c1e36] flex items-center gap-2.5">
-        <Avatar name={user?.display_name} size={28} />
-        <div className="flex-1 min-w-0">
-          <div className="text-xs font-bold truncate text-[#c4d9f0]">{user?.display_name}</div>
-          <div className="text-[10px] text-slate-500">@{user?.username}</div>
-        </div>
-        <div className="flex items-center gap-1 opacity-50" title="End-to-end encrypted">
-          <Shield size={11} className="text-green-500" />
+            {!isCollapsed && (
+              <button onClick={doLogout} className="p-1.5 hover:bg-white/10 rounded-lg text-muted-foreground hover:text-foreground transition-all">
+                <LogOut size={14} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
