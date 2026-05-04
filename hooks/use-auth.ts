@@ -77,13 +77,13 @@ export function useAuth() {
     setPhase("app");
   }, []);
 
-  const register = async (formData: FormData) => {
+  const register = async (authData: any) => {
     setLoading(true);
     setError("");
     try {
-      const username = (formData.get("username")?.toString() || "").trim();
-      const displayName = (formData.get("display_name")?.toString() || "").trim();
-      const password = (formData.get("password")?.toString() || "");
+      const username = (authData.username || "").trim();
+      const displayName = (authData.display_name || "").trim();
+      const password = authData.password || "";
 
       const usernameRegex = /^[a-zA-Z0-9_-]+$/;
 
@@ -114,7 +114,7 @@ export function useAuth() {
       ]);
 
       // 4. Register with Backend
-      const data = await ApiService.register({
+      const response = await ApiService.register({
         username,
         display_name: displayName,
         password,
@@ -123,7 +123,7 @@ export function useAuth() {
         pbkdf2_salt: base64Encode(salt.buffer as ArrayBuffer),
       });
 
-      await initSession(data, keyPair.privateKey, keyPair.publicKey);
+      await initSession(response, keyPair.privateKey, keyPair.publicKey);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -131,17 +131,17 @@ export function useAuth() {
     }
   };
 
-  const login = async (formData: FormData) => {
+  const login = async (authData: any) => {
     setLoading(true);
     setError("");
     try {
-      const username = (formData.get("username") as string || "").trim();
-      const password = formData.get("password") as string;
+      const username = (authData.username || "").trim();
+      const password = authData.password || "";
 
       // 1. Authenticate with Backend
-      const data = await ApiService.login({ username, password });
+      const response = await ApiService.login({ username, password });
       
-      const { wrapped_private_key, pbkdf2_salt, public_key } = data.user;
+      const { wrapped_private_key, pbkdf2_salt, public_key } = response.user;
 
       // 2. Derive Wrapping Key to unwrap the private key
       const wrappingKey = await CryptoService.deriveWrappingKey(password, pbkdf2_salt);
@@ -152,7 +152,7 @@ export function useAuth() {
         CryptoService.importPublicKey(public_key),
       ]);
 
-      await initSession(data, privateKey, publicKey);
+      await initSession(response, privateKey, publicKey);
     } catch (err: any) {
       setError(err.message);
     } finally {

@@ -57,16 +57,6 @@ export default function WhisperBox() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activeConvo]);
 
-  const handleAuthSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    if (authMode === "login") {
-      await login(formData);
-    } else {
-      await register(formData);
-    }
-  };
-
   const onSelectConvo = async (convo: any) => {
     setShowSearch(false);
     setSearchResults([]);
@@ -108,8 +98,8 @@ export default function WhisperBox() {
       <AuthScreen
         mode={authMode}
         onMode={setAuthMode}
-        onLogin={handleAuthSubmit}
-        onRegister={handleAuthSubmit}
+        onLogin={login}
+        onRegister={register}
         loading={authLoading}
         error={authError}
       />

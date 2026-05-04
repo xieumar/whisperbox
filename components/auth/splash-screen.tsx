@@ -21,7 +21,7 @@ export function SplashScreen({ onGetStarted, onRestore }: SplashScreenProps) {
 
       {/* Main Content */}
       <div className="z-10 flex flex-col items-center text-center space-y-8 max-w-[400px] w-full">
-        <div className="space-y-4">
+        <div className="space-y-4 my-10">
           <div className="flex justify-center">
             <Shield size={48} className="text-foreground stroke-[1.5]" />
           </div>
@@ -47,12 +47,7 @@ export function SplashScreen({ onGetStarted, onRestore }: SplashScreenProps) {
           </button>
         </div>
 
-        <div className="pt-24 flex flex-col items-center space-y-2 opacity-30">
-          <div className="w-4 h-4 border-2 border-foreground rounded-full flex items-center justify-center">
-            <div className="w-1 h-1 bg-foreground rounded-full" />
-          </div>
-          <span className="text-[10px] tracking-[0.3em] uppercase">Secure Session Ready</span>
-        </div>
+        
       </div>
     </div>
   );

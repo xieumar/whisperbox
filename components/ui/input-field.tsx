@@ -1,28 +1,40 @@
 import { cn } from "@/lib/utils";
 
-interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
   label: string;
   addon?: React.ReactNode;
+  error?: string;
 }
 
-export function InputField({ label, name, placeholder, type = "text", required, addon, ...props }: InputFieldProps) {
+export function InputField({ label, name, error, placeholder, type = "text", required, addon, ...props }: InputFieldProps) {
   return (
-    <div>
-      <label className="block text-[11px] font-semibold text-slate-400 mb-1 tracking-wider uppercase">
-        {label}
-      </label>
-      <div className="relative">
+    <div className="space-y-1.5 w-full">
+      <div className="flex justify-between items-end px-1">
+        <label className="block text-[10px] font-medium text-muted-foreground tracking-[0.15em] uppercase">
+          {label}
+        </label>
+        {error && (
+          <span className="text-[9px] font-medium text-destructive uppercase tracking-wider animate-in fade-in slide-in-from-right-1">
+            {error}
+          </span>
+        )}
+      </div>
+      <div className="relative group">
         <input
           name={name} type={type} placeholder={placeholder} required={required}
           className={cn(
-            "w-full bg-[#09111e] border border-[#0f2040] rounded-xl text-[#dde8f5] text-sm outline-none transition-all",
-            "focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 placeholder:text-slate-600",
-            addon ? "py-2.5 pl-3.5 pr-10" : "py-2.5 px-3.5"
+            "w-full bg-secondary/30 border rounded-2xl text-foreground text-sm outline-none transition-all",
+            error ? "border-destructive/50 focus:border-destructive" : "border-white/5 focus:border-white/10",
+            "focus:ring-4 focus:ring-white/5 placeholder:text-muted-foreground/30",
+            addon ? "py-3.5 pl-5 pr-12" : "py-3.5 px-5"
           )}
           {...props}
         />
         {addon && (
-          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
+          <div className={cn(
+            "absolute right-4 top-1/2 -translate-y-1/2 transition-colors",
+            error ? "text-destructive" : "text-muted-foreground group-focus-within:text-foreground"
+          )}>
             {addon}
           </div>
         )}
