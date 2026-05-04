@@ -102,8 +102,16 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
             const arr = [...prev];
             arr[idx] = { ...arr[idx], last_message_at: created_at };
             return [arr[idx], ...arr.filter((_, i) => i !== idx)];
+          } else {
+            // New conversation
+            const newConvo: Conversation = {
+              user_id: partnerId,
+              username: msg.from_username || "unknown", // Backend should ideally include this
+              display_name: msg.from_display_name || "New Contact",
+              last_message_at: created_at
+            };
+            return [newConvo, ...prev];
           }
-          return prev;
         });
       } catch (err) {
         console.error("WS message error:", err);
@@ -228,6 +236,24 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
           m.id === tempId ? { ...m, status: "sent" } : m
         )
       }));
+
+      // Update Convos List
+      setConvos(prev => {
+        const idx = prev.findIndex(c => c.user_id === recipientId);
+        const now = new Date().toISOString();
+        if (idx >= 0) {
+          const arr = [...prev];
+          arr[idx] = { ...arr[idx], last_message_at: now };
+          return [arr[idx], ...arr.filter((_, i) => i !== idx)];
+        } else {
+          return [{
+            user_id: recipientId,
+            username: activeConvo.username,
+            display_name: activeConvo.display_name,
+            last_message_at: now
+          }, ...prev];
+        }
+      });
     } catch (err) {
       setMessages(prev => ({
         ...prev,

@@ -68,19 +68,19 @@ export function Sidebar(props: SidebarProps) {
       {/* Mobile Toggle */}
       <button 
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="md:hidden fixed bottom-30 right-4 z-50 w-12 h-12 bg-foreground text-background rounded-full flex items-center justify-center shadow-2xl"
+        className="md:hidden fixed bottom-8 right-4 z-50 w-12 h-12 bg-foreground text-background rounded-full flex items-center justify-center shadow-2xl active:scale-95 transition-transform"
       >
         <Menu size={24} />
       </button>
 
       <div className={cn(
-        "fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden transition-opacity",
+        "fixed inset-0 z-40 bg-background/90 backdrop-blur-md md:hidden transition-opacity duration-300",
         isMobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )} onClick={() => setIsMobileOpen(false)} />
 
       <div className={cn(
-        "fixed md:relative inset-y-0 left-0 z-40 bg-background border-r border-white/5 flex flex-col transition-all duration-300 ease-in-out shrink-0",
-        isCollapsed ? "w-[80px]" : "w-[280px]",
+        "fixed md:relative inset-y-0 left-0 z-40 bg-[#0d0d0d] border-r border-white/10 flex flex-col transition-all duration-300 ease-in-out shrink-0",
+        isCollapsed ? "w-[80px]" : "w-[300px]",
         isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}>
         {/* Header */}
