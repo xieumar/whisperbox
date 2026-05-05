@@ -9,6 +9,7 @@ import {
 import { User, Conversation, Message } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
 import { cn, fmtTime } from "@/lib/utils";
+import { LogoutModal } from "@/components/auth/logout-modal";
 
 interface SidebarProps {
   user: User | null;
@@ -41,6 +42,7 @@ export function Sidebar(props: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("chats");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const NavItem = ({ id, label, icon: Icon }: { id: Tab, label: string, icon: any }) => {
     const isActive = activeTab === id;
@@ -83,7 +85,7 @@ export function Sidebar(props: SidebarProps) {
         {/* Header */}
         <div className={cn(
           "flex items-center transition-all",
-          isCollapsed ? "py-6 justify-center" : "p-6 justify-between"
+          isCollapsed ? "py-8 justify-center px-4" : "p-6 justify-between"
         )}>
           {!isCollapsed ? (
             <div className="flex items-center gap-3">
@@ -93,7 +95,7 @@ export function Sidebar(props: SidebarProps) {
           ) : (
             <button
               onClick={() => setIsCollapsed(false)}
-              className="p-2 hover:bg-white/5 rounded-xl transition-all hover:scale-110 active:scale-95"
+              className="flex items-center justify-center w-full aspect-square hover:bg-white/5 rounded-2xl transition-all group"
             >
               <Shield size={28} className="text-foreground" />
             </button>
@@ -257,12 +259,32 @@ export function Sidebar(props: SidebarProps) {
               </div>
             )}
             {!isCollapsed && (
-              <button onClick={doLogout} className="p-1.5 hover:bg-white/10 rounded-lg text-muted-foreground hover:text-foreground transition-all">
+              <button 
+                onClick={() => setShowLogoutModal(true)} 
+                className="p-1.5 hover:bg-white/10 rounded-lg text-muted-foreground hover:text-foreground transition-all"
+              >
                 <LogOut size={14} />
               </button>
             )}
           </div>
+          {isCollapsed && (
+            <button 
+              onClick={() => setShowLogoutModal(true)}
+              className="w-full aspect-square flex items-center justify-center rounded-2xl text-muted-foreground/20 hover:text-foreground hover:bg-white/5 transition-all"
+            >
+              <LogOut size={20} />
+            </button>
+          )}
         </div>
+
+        <LogoutModal 
+          isOpen={showLogoutModal} 
+          onClose={() => setShowLogoutModal(false)} 
+          onConfirm={() => {
+            setShowLogoutModal(false);
+            doLogout();
+          }} 
+        />
       </div>
     </>
   );
