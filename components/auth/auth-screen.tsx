@@ -9,14 +9,17 @@ import { InputField } from "@/components/ui/input-field";
 import { cn } from "@/lib/utils";
 
 const loginSchema = z.object({
-  username: z.string().min(3, "Identifier too short"),
-  password: z.string().min(8, "Passphrase too short"),
+  username: z.string().min(1, "Identifier is required").min(3, "Identifier must be at least 3 characters"),
+  password: z.string().min(1, "Passphrase is required").min(8, "Passphrase must be at least 8 characters"),
 });
 
 const registerSchema = z.object({
-  display_name: z.string().min(1, "Name is required"),
-  username: z.string().min(3, "Identifier too short").regex(/^[a-zA-Z0-9_-]+$/, "Invalid characters"),
-  password: z.string().min(8, "Passphrase must be 8+ characters"),
+  display_name: z.string().min(1, "Display name is required"),
+  username: z.string()
+    .min(1, "Identifier is required")
+    .min(3, "Identifier must be at least 3 characters")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Use only letters, numbers, underscores, or hyphens"),
+  password: z.string().min(1, "Passphrase is required").min(8, "Passphrase must be at least 8 characters"),
 });
 
 type AuthFormValues = {
@@ -44,6 +47,8 @@ export function AuthScreen({ mode, onMode, onLogin, onRegister, loading, error }
     reset,
   } = useForm<AuthFormValues>({
     resolver: zodResolver(mode === "login" ? loginSchema : registerSchema),
+    mode: "onBlur",
+    reValidateMode: "onBlur",
   });
 
   const onSubmit = (data: any) => {

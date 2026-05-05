@@ -13,19 +13,16 @@ export function InputField({ label, name, error, placeholder, type = "text", req
         <label className="block text-[10px] font-medium text-muted-foreground tracking-[0.15em] uppercase">
           {label}
         </label>
-        {error && (
-          <span className="text-[9px] font-medium text-destructive uppercase tracking-wider animate-in fade-in slide-in-from-right-1">
-            {error}
-          </span>
-        )}
       </div>
       <div className="relative group">
         <input
           name={name} type={type} placeholder={placeholder} required={required}
           className={cn(
             "w-full bg-secondary/30 border rounded-2xl text-foreground text-sm outline-none transition-all",
-            error ? "border-destructive/50 focus:border-destructive" : "border-white/5 focus:border-white/10",
-            "focus:ring-4 focus:ring-white/5 placeholder:text-muted-foreground/30",
+            "focus:ring-4 placeholder:text-muted-foreground/30",
+            error 
+              ? "border-destructive/40 focus:border-destructive/60 focus:ring-destructive/10" 
+              : "border-white/5 focus:border-white/10 focus:ring-white/5",
             addon ? "py-3.5 pl-5 pr-12" : "py-3.5 px-5"
           )}
           {...props}
@@ -39,6 +36,11 @@ export function InputField({ label, name, error, placeholder, type = "text", req
           </div>
         )}
       </div>
+      {error && (
+        <p className="text-[10px] font-medium text-destructive/80 px-1 animate-in fade-in slide-in-from-top-1">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
