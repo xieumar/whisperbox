@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  Search, X, Loader2, MessageSquare, LogOut, 
+import {
+  Search, X, Loader2, MessageSquare, LogOut,
   Wifi, WifiOff, Shield, Lock, Settings, User as UserIcon,
   ChevronLeft, ChevronRight, Menu
 } from "lucide-react";
@@ -31,11 +31,11 @@ interface SidebarProps {
 type Tab = "chats" | "security" | "profile";
 
 export function Sidebar(props: SidebarProps) {
-  const { 
-    user, wsStatus, doLogout, searchQ, handleSearchChange, 
-    showSearch, setShowSearch, searching, searchResults, 
-    setSearchResults, setSearchQ, convos, activeId, 
-    messages, selectConvo 
+  const {
+    user, wsStatus, doLogout, searchQ, handleSearchChange,
+    showSearch, setShowSearch, searching, searchResults,
+    setSearchResults, setSearchQ, convos, activeId,
+    messages, selectConvo
   } = props;
 
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -48,17 +48,14 @@ export function Sidebar(props: SidebarProps) {
       <button
         onClick={() => setActiveTab(id)}
         className={cn(
-          "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 group relative",
-          isActive ? "bg-white/5 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+          "flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 group relative w-full",
+          isActive ? "bg-white/[0.08] text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-white/5",
           isCollapsed ? "justify-center" : "justify-start"
         )}
         title={isCollapsed ? label : undefined}
       >
-        <Icon size={18} className={cn(isActive ? "opacity-100" : "opacity-40 group-hover:opacity-100")} />
-        {!isCollapsed && <span className="text-[11px] font-bold uppercase tracking-[0.15em]">{label}</span>}
-        {isActive && !isCollapsed && (
-          <div className="absolute left-0 w-1 h-4 bg-foreground rounded-r-full" />
-        )}
+        <Icon size={isActive ? 20 : 18} className={cn(isActive ? "opacity-100" : "opacity-40 group-hover:opacity-100")} />
+        {!isCollapsed && <span className="text-[12px] font-bold uppercase tracking-[0.2em]">{label}</span>}
       </button>
     );
   };
@@ -66,11 +63,11 @@ export function Sidebar(props: SidebarProps) {
   return (
     <>
       {/* Mobile Toggle */}
-      <button 
+      <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="md:hidden fixed bottom-8 right-4 z-50 w-12 h-12 bg-foreground text-background rounded-full flex items-center justify-center shadow-2xl active:scale-95 transition-transform"
+        className="md:hidden fixed bottom-24 right-6 z-50 w-14 h-14 bg-foreground text-background rounded-full flex items-center justify-center shadow-2xl active:scale-95 transition-transform"
       >
-        <Menu size={24} />
+        <Menu size={28} />
       </button>
 
       <div className={cn(
@@ -84,21 +81,32 @@ export function Sidebar(props: SidebarProps) {
         isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}>
         {/* Header */}
-        <div className="p-6 flex items-center justify-between">
-          {!isCollapsed && (
+        <div className={cn(
+          "flex items-center transition-all",
+          isCollapsed ? "py-6 justify-center" : "p-6 justify-between"
+        )}>
+          {!isCollapsed ? (
             <div className="flex items-center gap-3">
               <Shield size={20} className="text-foreground" />
               <span className="text-sm font-light tracking-[0.2em] uppercase">Vault</span>
             </div>
+          ) : (
+            <button
+              onClick={() => setIsCollapsed(false)}
+              className="p-2 hover:bg-white/5 rounded-xl transition-all hover:scale-110 active:scale-95"
+            >
+              <Shield size={28} className="text-foreground" />
+            </button>
           )}
-          {isCollapsed && <Shield size={20} className="mx-auto text-foreground" />}
-          
-          <button 
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden md:flex p-1.5 hover:bg-white/5 rounded-lg text-muted-foreground transition-colors"
-          >
-            {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-          </button>
+
+          {!isCollapsed && (
+            <button
+              onClick={() => setIsCollapsed(true)}
+              className="hidden md:flex p-1.5 hover:bg-white/5 rounded-lg text-muted-foreground transition-colors"
+            >
+              <ChevronLeft size={14} />
+            </button>
+          )}
         </div>
 
         {/* Navigation Tabs */}
@@ -141,9 +149,9 @@ export function Sidebar(props: SidebarProps) {
                       <div className="p-4 text-center text-[11px] text-muted-foreground/50 uppercase tracking-widest">Zero Results</div>
                     ) : (
                       searchResults.map((u) => (
-                        <button 
-                          key={u.id} 
-                          onClick={() => { selectConvo({ user_id: u.id, username: u.username, display_name: u.display_name }); setIsMobileOpen(false); }} 
+                        <button
+                          key={u.id}
+                          onClick={() => { selectConvo({ user_id: u.id, username: u.username, display_name: u.display_name }); setIsMobileOpen(false); }}
                           className={cn(
                             "w-full rounded-xl hover:bg-white/5 p-2 flex items-center gap-3 text-left transition-all group",
                             isCollapsed ? "justify-center" : "px-3"
@@ -175,9 +183,9 @@ export function Sidebar(props: SidebarProps) {
                         const isActive = activeId === c.user_id;
                         const lastMsg = (messages[c.user_id] || []).slice(-1)[0];
                         return (
-                          <div 
-                            key={c.user_id} 
-                            onClick={() => { selectConvo(c); setIsMobileOpen(false); }} 
+                          <div
+                            key={c.user_id}
+                            onClick={() => { selectConvo(c); setIsMobileOpen(false); }}
                             className={cn(
                               "relative group rounded-xl p-2 flex items-center gap-3 cursor-pointer transition-all",
                               isActive ? "bg-white/5" : "hover:bg-white/5",
