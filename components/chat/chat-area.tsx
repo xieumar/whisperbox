@@ -89,7 +89,7 @@ export function ChatArea(props: ChatAreaProps) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-2 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
         {msgLoading ? (
           <div className="flex-1 h-full flex items-center justify-center">
             <Loader2 size={24} className="text-muted-foreground/10 animate-spin" />
@@ -119,7 +119,7 @@ export function ChatArea(props: ChatAreaProps) {
               const isMine = msg.isMine;
 
               return (
-                <div key={item.key} className={cn("flex group", isMine ? "justify-end" : "justify-start", isLast ? "mb-4" : "mb-0.5")}>
+                <div key={item.key} className={cn("flex group", isMine ? "justify-end" : "justify-start", isLast ? "mb-6" : "mb-1.5")}>
                   {!isMine && (
                     <div className="w-8 mr-3 self-end mb-1 shrink-0">
                       {isLast && <Avatar name={activeConvo.display_name} size={24} />}
