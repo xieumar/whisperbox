@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { AuthScreen } from "@/components/auth/auth-screen";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/chat/sidebar";
 import { ChatArea } from "@/components/chat/chat-area";
 import { SplashScreen } from "@/components/auth/splash-screen";
@@ -9,8 +9,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useChat } from "@/hooks/use-chat";
 
 export default function WhisperBox() {
-  const [phase, setPhase] = useState<"splash" | "auth" | "app">("splash");
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [searchQ, setSearchQ] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [input, setInput] = useState("");
@@ -22,14 +20,13 @@ export default function WhisperBox() {
     user,
     accessToken,
     phase: authPhase,
-    loading: authLoading,
-    error: authError,
+    initialized,
     privateKey,
     publicKey,
-    login,
-    register,
     logout,
   } = useAuth();
+
+  const router = useRouter();
 
   const {
     wsStatus,
@@ -46,12 +43,12 @@ export default function WhisperBox() {
     sending,
   } = useChat({ user, accessToken, privateKey, publicKey });
 
-  // Sync auth phase with UI phase
+  // Handle redirects
   useEffect(() => {
-    if (authPhase === "app") {
-      setPhase("app");
+    if (initialized && authPhase === "auth") {
+      router.push("/login");
     }
-  }, [authPhase]);
+  }, [initialized, authPhase, router]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -79,30 +76,12 @@ export default function WhisperBox() {
     await sendMessage(text);
   };
 
-  if (phase === "splash") {
+  // Show splash/loading while initializing or if redirected
+  if (!initialized || authPhase === "auth") {
     return (
       <SplashScreen
-        onGetStarted={() => {
-          setAuthMode("register");
-          setPhase("auth");
-        }}
-        onRestore={() => {
-          setAuthMode("login");
-          setPhase("auth");
-        }}
-      />
-    );
-  }
-
-  if (authPhase === "auth") {
-    return (
-      <AuthScreen
-        mode={authMode}
-        onMode={setAuthMode}
-        onLogin={login}
-        onRegister={register}
-        loading={authLoading}
-        error={authError}
+        onGetStarted={() => router.push("/signup")}
+        onRestore={() => router.push("/login")}
       />
     );
   }

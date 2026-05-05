@@ -13,6 +13,7 @@ export function useAuth() {
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [phase, setPhase] = useState<AuthPhase>("auth");
   const [loading, setLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState("");
 
   const privateKeyRef = useRef<CryptoKey | null>(null);
@@ -36,8 +37,28 @@ export function useAuth() {
     localStorage.setItem("wb_salt", data.user.pbkdf2_salt);
   }, []);
 
-  // Restore session logic would go here, but for now we'll focus on making sure 
-  // the current session works perfectly.
+  // Restore session
+  useEffect(() => {
+    const restoreSession = async () => {
+      try {
+        const storedUser = localStorage.getItem("wb_user");
+        const at = localStorage.getItem("wb_at");
+        const rt = localStorage.getItem("wb_rt");
+
+        if (storedUser && at && rt) {
+          setUser(JSON.parse(storedUser));
+          setAccessToken(at);
+          setRefreshToken(rt);
+          setPhase("app");
+        }
+      } catch (e) {
+        console.error("Failed to restore session", e);
+      } finally {
+        setInitialized(true);
+      }
+    };
+    restoreSession();
+  }, []);
 
   const register = async (authData: any) => {
     setLoading(true);
@@ -119,6 +140,7 @@ export function useAuth() {
     accessToken,
     phase,
     loading,
+    initialized,
     error,
     privateKey: privateKeyRef.current,
     publicKey: publicKeyRef.current,

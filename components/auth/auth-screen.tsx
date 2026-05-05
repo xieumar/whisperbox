@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -30,21 +31,19 @@ type AuthFormValues = {
 
 interface AuthScreenProps {
   mode: "login" | "register";
-  onMode: (mode: "login" | "register") => void;
-  onLogin: (data: any) => void;
-  onRegister: (data: any) => void;
+  onLogin?: (data: any) => void;
+  onRegister?: (data: any) => void;
   loading: boolean;
   error: string;
 }
 
-export function AuthScreen({ mode, onMode, onLogin, onRegister, loading, error }: AuthScreenProps) {
+export function AuthScreen({ mode, onLogin, onRegister, loading, error }: AuthScreenProps) {
   const [showPw, setShowPw] = useState(false);
 
   const {
     register: regField,
     handleSubmit,
     formState: { errors },
-    reset,
   } = useForm<AuthFormValues>({
     resolver: zodResolver(mode === "login" ? loginSchema : registerSchema),
     mode: "onBlur",
@@ -53,15 +52,10 @@ export function AuthScreen({ mode, onMode, onLogin, onRegister, loading, error }
 
   const onSubmit = (data: any) => {
     if (mode === "login") {
-      onLogin(data);
+      onLogin?.(data);
     } else {
-      onRegister(data);
+      onRegister?.(data);
     }
-  };
-
-  const toggleMode = () => {
-    reset();
-    onMode(mode === "login" ? "register" : "login");
   };
 
   return (
@@ -143,13 +137,12 @@ export function AuthScreen({ mode, onMode, onLogin, onRegister, loading, error }
           </form>
 
           <div className="text-center">
-            <button
-              type="button"
-              onClick={toggleMode}
+            <Link
+              href={mode === "login" ? "/signup" : "/login"}
               className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] hover:text-foreground transition-colors"
             >
               {mode === "login" ? "Need a new identity?" : "Already have an identity?"}
-            </button>
+            </Link>
           </div>
         </div>
 
