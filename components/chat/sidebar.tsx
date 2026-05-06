@@ -10,6 +10,8 @@ import { User, Conversation, Message } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
 import { cn, fmtTime } from "@/lib/utils";
 import { LogoutModal } from "@/components/auth/logout-modal";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface SidebarProps {
   user: User | null;
@@ -27,8 +29,6 @@ interface SidebarProps {
   activeId?: string;
   messages: Record<string, Message[]>;
   selectConvo: (convo: Partial<Conversation> & { user_id: string }) => void;
-  activeTab: "chats" | "security" | "profile";
-  setActiveTab: (tab: "chats" | "security" | "profile") => void;
 }
 
 type Tab = "chats" | "security" | "profile";
@@ -38,18 +38,20 @@ export function Sidebar(props: SidebarProps) {
     user, wsStatus, doLogout, searchQ, handleSearchChange,
     showSearch, setShowSearch, searching, searchResults,
     setSearchResults, setSearchQ, convos, activeId,
-    messages, selectConvo, activeTab, setActiveTab
+    messages, selectConvo
   } = props;
+
+  const pathname = usePathname();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const NavItem = ({ id, label, icon: Icon }: { id: "chats" | "security" | "profile", label: string, icon: any }) => {
-    const isActive = activeTab === id;
+  const NavItem = ({ href, id, label, icon: Icon }: { href: string, id: string, label: string, icon: any }) => {
+    const isActive = (id === "chats" && pathname === "/") || (id !== "chats" && pathname.startsWith(href));
     return (
-      <button
-        onClick={() => setActiveTab(id)}
+      <Link
+        href={href}
         className={cn(
           "flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group relative w-full",
           isActive ? "bg-white/[0.04] text-foreground" : "text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.02]",
@@ -59,7 +61,7 @@ export function Sidebar(props: SidebarProps) {
       >
         <Icon size={isActive ? 18 : 16} className={cn(isActive ? "opacity-100" : "opacity-30 group-hover:opacity-100")} />
         {!isCollapsed && <span className="text-[11px] font-bold uppercase tracking-[0.2em]">{label}</span>}
-      </button>
+      </Link>
     );
   };
 
@@ -114,9 +116,9 @@ export function Sidebar(props: SidebarProps) {
 
         {/* Navigation Tabs */}
         <div className="px-4 space-y-2 mb-6">
-          <NavItem id="chats" label="Chats" icon={MessageSquare} />
-          <NavItem id="security" label="Security" icon={Lock} />
-          <NavItem id="profile" label="Profile" icon={UserIcon} />
+          <NavItem href="/" id="chats" label="Chats" icon={MessageSquare} />
+          <NavItem href="/security" id="security" label="Security" icon={Lock} />
+          <NavItem href="/profile" id="profile" label="Profile" icon={UserIcon} />
         </div>
 
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
