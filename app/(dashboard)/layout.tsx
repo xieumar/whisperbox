@@ -32,7 +32,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-background text-foreground font-sans overflow-hidden">
-      <div className="flex flex-1 w-full max-w-[1440px] mx-auto border-x border-white/5 relative">
+      <div className="flex flex-1 w-full max-w-[1440px] mx-auto border-x border-white/5 relative h-full">
         <Sidebar
           user={user}
           wsStatus={chat.wsStatus}
@@ -51,7 +51,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
           selectConvo={onSelectConvo}
         />
         
-        <div className="flex-1 flex flex-col relative min-w-0">
+        <div className="flex-1 flex flex-col relative min-w-0 h-full min-h-0">
           {children}
         </div>
       </div>

@@ -28,7 +28,7 @@ export function ProfileView({ user }: ProfileViewProps) {
   ];
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-background overflow-y-auto custom-scrollbar">
+    <div className="flex-1 flex flex-col min-w-0 h-full min-h-0 bg-background overflow-y-auto custom-scrollbar">
       {/* Header */}
       <div className="h-16 px-6 border-b border-white/5 flex items-center justify-between z-10 bg-background/50 backdrop-blur-xl shrink-0">
         <div className="flex items-center gap-3">
