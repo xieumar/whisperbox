@@ -26,8 +26,8 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
   const pkCache = useRef<Record<string, CryptoKey>>({});
   const loadedSet = useRef<Set<string>>(new Set());
   const searchTimer = useRef<NodeJS.Timeout | null>(null);
+  const pollTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Sync refs for use in callbacks
   const userRef = useRef(user);
   const tokenRef = useRef(accessToken);
   const privKeyRef = useRef(privateKey);
@@ -38,21 +38,50 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
   useEffect(() => { privKeyRef.current = privateKey; }, [privateKey]);
   useEffect(() => { pubKeyRef.current = publicKey; }, [publicKey]);
 
-  // Load initial conversations
+  const syncConversations = useCallback(async () => {
+    if (!tokenRef.current) return;
+    try {
+      const latestConvos = await ApiService.getConversations(tokenRef.current);
+      
+      setConvos((prev) => {
+        latestConvos.forEach((newC: Conversation) => {
+          const oldC = prev.find(p => p.user_id === newC.user_id);
+          if (oldC && oldC.last_message_at !== newC.last_message_at) {
+            loadMessages(newC.user_id, true);
+          } else if (!oldC) {
+            loadMessages(newC.user_id, true);
+          }
+        });
+        return latestConvos;
+      });
+    } catch (err) {}
+  }, []);
+
   useEffect(() => {
     if (accessToken) {
-      ApiService.getConversations(accessToken)
-        .then(setConvos)
-        .catch(() => {});
+      syncConversations();
     }
-  }, [accessToken]);
+  }, [accessToken, syncConversations]);
 
-  // WebSocket Connection
+  useEffect(() => {
+    if (wsStatus === "connected") {
+      if (pollTimer.current) clearInterval(pollTimer.current);
+      return;
+    }
+
+    pollTimer.current = setInterval(() => {
+      if (tokenRef.current) syncConversations();
+    }, 10000);
+
+    return () => {
+      if (pollTimer.current) clearInterval(pollTimer.current);
+    };
+  }, [wsStatus, syncConversations]);
+
   const connectWS = useCallback((token: string) => {
     if (wsRef.current) wsRef.current.close();
     setWsStatus("connecting");
     
-    // Convert https to wss for the WebSocket connection
     const wsUrl = (ApiService.BASE_URL || "https://whisperbox.koyeb.app").replace("http", "ws") + "/ws";
     const ws = new WebSocket(`${wsUrl}?token=${token}`);
     wsRef.current = ws;
@@ -62,7 +91,6 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
     };
     ws.onclose = () => {
       setWsStatus("disconnected");
-      // Reconnect after 5s if still logged in
       setTimeout(() => {
         if (tokenRef.current) connectWS(tokenRef.current);
       }, 5000);
@@ -100,7 +128,6 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
           return { ...prev, [partnerId]: [...existing, message] };
         });
 
-        // Update conversation list
         setConvos((prev) => {
           const idx = prev.findIndex((c) => c.user_id === partnerId);
           if (idx >= 0) {
@@ -108,10 +135,9 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
             arr[idx] = { ...arr[idx], last_message_at: created_at };
             return [arr[idx], ...arr.filter((_, i) => i !== idx)];
           } else {
-            // New conversation
             const newConvo: Conversation = {
               user_id: partnerId,
-              username: msg.from_username || "unknown", // Backend should ideally include this
+              username: msg.from_username || "unknown", 
               display_name: msg.from_display_name || "New Contact",
               last_message_at: created_at
             };
@@ -129,8 +155,8 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
     return () => wsRef.current?.close();
   }, [accessToken, connectWS]);
 
-  const loadMessages = async (uid: string) => {
-    if (loadedSet.current.has(uid)) {
+  const loadMessages = async (uid: string, force = false) => {
+    if (!force && loadedSet.current.has(uid)) {
       return;
     }
     if (!tokenRef.current || !privateKey) {
@@ -173,6 +199,7 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
         );
         return { ...prev, [uid]: all };
       });
+      loadedSet.current.add(uid);
     } catch (err) {
       console.error("[useChat] loadMessages failed", err);
       loadedSet.current.delete(uid);
@@ -212,7 +239,6 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
     const recipientId = activeConvo.user_id;
     const tempId = `tmp_${Date.now()}`;
     
-    // Optimistic Update
     const tempMsg: Message = {
       id: tempId,
       from_user_id: user.id,
@@ -232,7 +258,6 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
     });
 
     try {
-      // 1. Get Recipient Public Key
       let rPubKey = pkCache.current[recipientId];
       if (!rPubKey) {
         const { public_key } = await ApiService.getPublicKey(recipientId, tokenRef.current);
@@ -240,10 +265,8 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
         pkCache.current[recipientId] = rPubKey;
       }
 
-      // 2. Encrypt
       const payload = await CryptoService.encrypt(text, rPubKey, publicKey);
 
-      // 3. Send
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ event: "message.send", to: recipientId, payload }));
       } else {
@@ -257,7 +280,6 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
         )
       }));
 
-      // Update Convos List
       setConvos(prev => {
         const idx = prev.findIndex(c => c.user_id === recipientId);
         const now = new Date().toISOString();
