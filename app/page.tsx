@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/chat/sidebar";
 import { ChatArea } from "@/components/chat/chat-area";
 import { SplashScreen } from "@/components/auth/splash-screen";
 import { SecurityView } from "@/components/chat/security-view";
+import { ProfileView } from "@/components/chat/profile-view";
 import { useAuth } from "@/hooks/use-auth";
 import { useChat } from "@/hooks/use-chat";
 
@@ -111,7 +112,8 @@ export default function WhisperBox() {
         setActiveTab={setActiveTab}
       />
 
-      {activeTab === "chats" && (
+      <div className="flex-1 flex flex-col relative min-w-0">
+        {activeTab === "chats" && (
         <ChatArea
           activeConvo={activeConvo}
           messages={messages}
@@ -130,15 +132,10 @@ export default function WhisperBox() {
       )}
 
       {activeTab === "profile" && (
-        <div className="flex-1 flex flex-col bg-background relative overflow-hidden">
-          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4">
-            <h2 className="text-sm font-bold uppercase tracking-[0.3em]">Authorized Profile</h2>
-            <p className="text-[11px] text-muted-foreground/40">Managing identity {user?.display_name}...</p>
-          </div>
-        </div>
+        <ProfileView user={user} />
       )}
     </div>
-  </div>
-);
+      </div>
+    </div>
+  );
 }
-

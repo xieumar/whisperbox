@@ -1,4 +1,6 @@
-export function Avatar({ name, size = 36 }: { name?: string; size?: number }) {
+import { cn } from "@/lib/utils";
+
+export function Avatar({ name, size = 36, className }: { name?: string; size?: number; className?: string }) {
   const MONO_PALETTE = [
     "hsl(0 0% 15%)",
     "hsl(0 0% 20%)",
@@ -9,7 +11,7 @@ export function Avatar({ name, size = 36 }: { name?: string; size?: number }) {
   return (
     <div
       style={{ width: size, height: size, background: MONO_PALETTE[idx], fontSize: size * 0.38 }}
-      className="rounded-full flex items-center justify-center text-foreground/50 border border-white/5 font-bold shrink-0 select-none tracking-tighter"
+      className={cn("rounded-full flex items-center justify-center text-foreground/50 border border-white/5 font-bold shrink-0 select-none tracking-tighter", className)}
     >
       {name ? name[0].toUpperCase() : "?"}
     </div>
