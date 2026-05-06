@@ -1,6 +1,55 @@
 export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://whisperbox.koyeb.app";
 
-const apiFetch = async (path: string, opts: RequestInit = {}, token: string | null = null) => {
+let _tokenUpdateCallback: ((newToken: string) => void) | null = null;
+
+export function registerTokenUpdater(callback: (newToken: string) => void) {
+  _tokenUpdateCallback = callback;
+}
+
+let _refreshPromise: Promise<string> | null = null;
+
+async function doRefresh(): Promise<string> {
+  if (_refreshPromise) return _refreshPromise;
+
+  _refreshPromise = (async () => {
+    const rt = localStorage.getItem("wb_rt");
+    if (!rt) throw new Error("No refresh token available");
+
+    const response = await fetch(`${BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: rt }),
+    });
+
+    if (!response.ok) {
+      localStorage.clear();
+      window.location.href = "/login";
+      throw new Error("Session expired");
+    }
+
+    const data = await response.json();
+    const newToken = data.access_token;
+
+    localStorage.setItem("wb_at", newToken);
+    if (data.refresh_token) {
+      localStorage.setItem("wb_rt", data.refresh_token);
+    }
+
+    if (_tokenUpdateCallback) {
+      _tokenUpdateCallback(newToken);
+    }
+
+    return newToken;
+  })();
+
+  try {
+    return await _refreshPromise;
+  } finally {
+    _refreshPromise = null;
+  }
+}
+
+const apiFetch = async (path: string, opts: RequestInit = {}, token: string | null = null, _retried = false) => {
   const headers: Record<string, string> = { 
     "Content-Type": "application/json",
     ...((opts.headers as Record<string, string>) || {})
@@ -17,6 +66,15 @@ const apiFetch = async (path: string, opts: RequestInit = {}, token: string | nu
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
+    
+    if (response.status === 401 && !_retried && token) {
+      try {
+        const newToken = await doRefresh();
+        return apiFetch(path, opts, newToken, true);
+      } catch (refreshErr: any) {
+        throw refreshErr;
+      }
+    }
     
     // Handle FastAPI style validation errors (422)
     if (response.status === 422 && Array.isArray(errorData.detail)) {

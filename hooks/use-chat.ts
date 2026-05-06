@@ -57,7 +57,9 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
     const ws = new WebSocket(`${wsUrl}?token=${token}`);
     wsRef.current = ws;
 
-    ws.onopen = () => setWsStatus("connected");
+    ws.onopen = () => {
+      setWsStatus("connected");
+    };
     ws.onclose = () => {
       setWsStatus("disconnected");
       // Reconnect after 5s if still logged in
@@ -65,7 +67,10 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
         if (tokenRef.current) connectWS(tokenRef.current);
       }, 5000);
     };
-    ws.onerror = () => setWsStatus("disconnected");
+    ws.onerror = (err) => {
+      console.error("[useChat] WebSocket error", err);
+      setWsStatus("disconnected");
+    };
 
     ws.onmessage = async (ev) => {
       try {
@@ -125,19 +130,28 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
   }, [accessToken, connectWS]);
 
   const loadMessages = async (uid: string) => {
-    if (loadedSet.current.has(uid) || !tokenRef.current || !privKeyRef.current) return;
+    if (loadedSet.current.has(uid)) {
+      return;
+    }
+    if (!tokenRef.current || !privateKey) {
+      return;
+    }
+    
     loadedSet.current.add(uid);
     setMsgLoading(true);
     
     try {
       const raw = await ApiService.getMessages(uid, tokenRef.current);
+      
       const decrypted = await Promise.all(
         raw.map(async (m: any) => {
           const isMine = m.from_user_id === userRef.current?.id;
           let text = "[Decryption failed]";
           try { 
-            text = await CryptoService.decrypt(m.payload, privKeyRef.current!, isMine); 
-          } catch {}
+            text = await CryptoService.decrypt(m.payload, privateKey!, isMine); 
+          } catch (err) {
+            console.error("[useChat] Decryption error for message", m.id, err);
+          }
           return { 
             id: m.id, 
             from_user_id: m.from_user_id, 
@@ -160,6 +174,7 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
         return { ...prev, [uid]: all };
       });
     } catch (err) {
+      console.error("[useChat] loadMessages failed", err);
       loadedSet.current.delete(uid);
     } finally {
       setMsgLoading(false);
@@ -189,7 +204,9 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
   };
 
   const sendMessage = async (text: string) => {
-    if (!text.trim() || !activeConvo || !user || !pubKeyRef.current) return;
+    if (!text.trim() || !activeConvo || !user || !publicKey) {
+      return;
+    }
     
     setSending(true);
     const recipientId = activeConvo.user_id;
@@ -206,10 +223,13 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
       status: "sending"
     };
 
-    setMessages(prev => ({
-      ...prev,
-      [recipientId]: [...(prev[recipientId] || []), tempMsg]
-    }));
+    setMessages(prev => {
+      const updated = {
+        ...prev,
+        [recipientId]: [...(prev[recipientId] || []), tempMsg]
+      };
+      return updated;
+    });
 
     try {
       // 1. Get Recipient Public Key
@@ -221,7 +241,7 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
       }
 
       // 2. Encrypt
-      const payload = await CryptoService.encrypt(text, rPubKey, pubKeyRef.current);
+      const payload = await CryptoService.encrypt(text, rPubKey, publicKey);
 
       // 3. Send
       if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -255,6 +275,7 @@ export function useChat({ user, accessToken, privateKey, publicKey }: UseChatPro
         }
       });
     } catch (err) {
+      console.error("[useChat] failed to send message", err);
       setMessages(prev => ({
         ...prev,
         [recipientId]: (prev[recipientId] || []).map(m => 
