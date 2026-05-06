@@ -60,21 +60,24 @@ export function AuthScreen({ mode, onLogin, onRegister, loading, error }: AuthSc
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Concentric Circles Background */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none">
-        <div className="absolute w-[300px] h-[300px] border border-foreground rounded-full" />
-        <div className="absolute w-[500px] h-[500px] border border-foreground rounded-full" />
-        <div className="absolute w-[700px] h-[700px] border border-foreground rounded-full" />
+      {/* Concentric Circles Background - Dimmed & Technical */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-[0.015] pointer-events-none">
+        <div className="absolute w-[300px] h-[300px] border border-foreground rounded-full animate-deep-pulse" />
+        <div className="absolute w-[500px] h-[500px] border border-foreground rounded-full animate-deep-pulse [animation-delay:0.5s]" />
+        <div className="absolute w-[700px] h-[700px] border border-foreground rounded-full animate-deep-pulse [animation-delay:1s]" />
       </div>
 
       <div className="w-full max-w-[400px] z-10 flex flex-col space-y-12">
-        <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            <Shield size={40} className="text-foreground opacity-80" />
+        <div className="text-center space-y-6">
+          <div className="relative w-24 h-24 flex items-center justify-center mx-auto">
+            <div className="absolute inset-0 border border-foreground/10 rounded-full animate-[ping_3s_linear_infinite]" />
+            <div className="absolute inset-2 border border-foreground/5 rounded-full" />
+            <Shield size={44} className="text-white/40 stroke-[1] fill-foreground/20" />
           </div>
-          <div className="space-y-1">
-            <h1 className="text-3xl font-light tracking-[0.2em] uppercase">Vault</h1>
-            <p className="text-muted-foreground text-[10px] tracking-widest uppercase">
+          
+          <div className="space-y-2">
+            <h1 className="text-[20px] font-semibold uppercase tracking-[0.5em] text-white pl-1.5">Vault</h1>
+            <p className="text-muted-foreground/30 text-[8px] font-bold tracking-[0.2em] uppercase">
               {mode === "register" ? "Initialize your secure environment." : "Access your secure environment."}
             </p>
           </div>

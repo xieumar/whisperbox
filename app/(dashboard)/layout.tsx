@@ -62,12 +62,13 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { initialized, phase } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (initialized && phase === "auth") {
+    if (initialized && phase === "auth" && pathname !== "/") {
       router.push("/login");
     }
-  }, [initialized, phase, router]);
+  }, [initialized, phase, router, pathname]);
 
   return (
     <ChatProvider>

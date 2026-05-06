@@ -92,7 +92,7 @@ export function Sidebar(props: SidebarProps) {
         )}>
           {!isCollapsed ? (
             <div className="flex items-center gap-3">
-              <Shield size={20} className="text-foreground" />
+              <Shield size={20} className="text-foreground fill-foreground/20" />
               <span className="text-sm font-light tracking-[0.2em] uppercase">Vault</span>
             </div>
           ) : (
