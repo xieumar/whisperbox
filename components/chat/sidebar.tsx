@@ -27,6 +27,8 @@ interface SidebarProps {
   activeId?: string;
   messages: Record<string, Message[]>;
   selectConvo: (convo: Partial<Conversation> & { user_id: string }) => void;
+  activeTab: "chats" | "security" | "profile";
+  setActiveTab: (tab: "chats" | "security" | "profile") => void;
 }
 
 type Tab = "chats" | "security" | "profile";
@@ -36,15 +38,14 @@ export function Sidebar(props: SidebarProps) {
     user, wsStatus, doLogout, searchQ, handleSearchChange,
     showSearch, setShowSearch, searching, searchResults,
     setSearchResults, setSearchQ, convos, activeId,
-    messages, selectConvo
+    messages, selectConvo, activeTab, setActiveTab
   } = props;
 
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>("chats");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const NavItem = ({ id, label, icon: Icon }: { id: Tab, label: string, icon: any }) => {
+  const NavItem = ({ id, label, icon: Icon }: { id: "chats" | "security" | "profile", label: string, icon: any }) => {
     const isActive = activeTab === id;
     return (
       <button
@@ -118,9 +119,8 @@ export function Sidebar(props: SidebarProps) {
           <NavItem id="profile" label="Profile" icon={UserIcon} />
         </div>
 
-        <div className="flex-1 flex flex-col min-h-0">
-          {activeTab === "chats" && (
-            <>
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0">
               {/* Search */}
               {!isCollapsed && (
                 <div className="px-4 mb-4">
@@ -215,28 +215,8 @@ export function Sidebar(props: SidebarProps) {
                     )}
                   </>
                 )}
-              </div>
-            </>
-          )}
-
-          {activeTab === "security" && (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4">
-              <Lock size={32} className="opacity-10" />
-              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">E2EE Protocol Active</p>
             </div>
-          )}
-
-          {activeTab === "profile" && (
-            <div className="flex-1 p-6 space-y-6">
-              <div className="flex flex-col items-center gap-4">
-                <Avatar name={user?.display_name} size={64} />
-                <div className="text-center">
-                  <h3 className="font-bold text-sm uppercase tracking-widest">{user?.display_name}</h3>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">@{user?.username}</p>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Footer */}
