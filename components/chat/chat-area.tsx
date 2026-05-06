@@ -29,19 +29,21 @@ export function ChatArea(props: ChatAreaProps) {
           <div className="absolute w-[600px] h-[600px] border border-foreground rounded-full" />
         </div>
 
-        <div className="z-10 flex flex-col items-center gap-8 max-w-[320px] text-center">
-          <div className="w-20 h-20 bg-secondary/20 rounded-[2rem] flex items-center justify-center border border-white/5 shadow-2xl">
-            <Shield size={40} className="text-muted-foreground/30" />
+        <div className="z-10 flex flex-col items-center gap-10 max-w-[320px] text-center">
+          <div className="relative w-24 h-24 flex items-center justify-center">
+            <div className="absolute inset-0 border border-foreground/10 rounded-full animate-[ping_3s_linear_infinite]" />
+            <div className="absolute inset-2 border border-foreground/5 rounded-full" />
+            <Shield size={44} className="text-foreground/40 stroke-[1]" />
           </div>
-          <div className="space-y-3">
-            <h2 className="text-sm font-bold uppercase tracking-[0.3em] text-muted-foreground">Secure Session Inactive</h2>
-            <p className="text-[11px] text-muted-foreground/40 leading-relaxed uppercase tracking-wider">
-              Select an authorized identity from the registry to initialize an end-to-end encrypted channel.
+          <div className="space-y-4">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] text-foreground/40">Secure Session Pending</h2>
+            <p className="text-[10px] text-muted-foreground/30 leading-relaxed uppercase tracking-[0.2em] px-6">
+              Establish a handshake by selecting an identity from the vault registry.
             </p>
           </div>
-          <div className="flex items-center gap-2 bg-secondary/30 border border-white/5 rounded-full py-2 px-4">
-            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-[9px] text-emerald-500/80 font-bold uppercase tracking-widest">Protocol: AES-GCM Ready</span>
+          <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-full py-1.5 px-5">
+            <div className="w-1 h-1 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            <span className="text-[8px] text-emerald-500/60 font-bold uppercase tracking-[0.25em]">AES-256-GCM Active</span>
           </div>
         </div>
       </div>
@@ -67,12 +69,12 @@ export function ChatArea(props: ChatAreaProps) {
     <div className="flex-1 flex flex-col min-w-0 bg-background relative">
       {/* Header */}
       <div className="h-16 px-6 border-b border-white/5 flex items-center justify-between z-10 bg-background/50 backdrop-blur-xl">
-        <div className="flex items-center gap-4">
-          <Avatar name={activeConvo.display_name} size={32} />
+        <div className="flex items-center gap-3">
+          <Avatar name={activeConvo.display_name} size={28} />
           <div className="min-w-0">
-            <div className="font-bold text-[13px] uppercase tracking-wider">{activeConvo.display_name}</div>
-            <div className="text-[10px] text-emerald-500/60 flex items-center gap-1.5 font-medium uppercase tracking-widest">
-              <div className="w-1 h-1 bg-emerald-500 rounded-full" /> Authorized Identity
+            <div className="font-bold text-[11px] uppercase tracking-[0.15em] text-foreground/90">{activeConvo.display_name}</div>
+            <div className="text-[8px] text-emerald-500/50 flex items-center gap-1.5 font-bold uppercase tracking-[0.2em]">
+              <div className="w-1 h-1 bg-emerald-500 rounded-full" /> Encrypted Identity
             </div>
           </div>
         </div>
@@ -128,27 +130,27 @@ export function ChatArea(props: ChatAreaProps) {
                   <div className={cn("max-w-[75%] lg:max-w-[60%]", isMine ? "items-end" : "items-start", "flex flex-col")}>
                     <div
                       className={cn(
-                        "px-4 py-3 text-[13px] leading-relaxed break-words transition-all border",
+                        "px-3.5 py-2.5 text-[12.5px] leading-relaxed break-words transition-all border",
                         isMine
                           ? msg.status === "error"
                             ? "bg-destructive/10 text-destructive border-destructive/20"
-                            : "bg-secondary text-foreground border-white/5"
-                          : "bg-secondary/30 text-foreground border-white/5",
+                            : "bg-white/[0.03] text-foreground border-white/5"
+                          : "bg-white/[0.01] text-foreground/80 border-white/5",
                         isMine
-                          ? "rounded-2xl rounded-tr-sm"
-                          : "rounded-2xl rounded-tl-sm",
-                        msg.status === "sending" && "opacity-40 scale-[0.98]"
+                          ? "rounded-xl rounded-tr-none"
+                          : "rounded-xl rounded-tl-none",
+                        msg.status === "sending" && "opacity-30"
                       )}
                     >
                       {msg.text}
                     </div>
                     {isLast && (
-                      <div className={cn("flex items-center gap-2 mt-1.5 px-1", isMine ? "justify-end" : "justify-start")}>
-                        <span className="text-[9px] font-bold text-muted-foreground/30 uppercase tracking-tighter">{fmtTime(msg.sentAt)}</span>
+                      <div className={cn("flex items-center gap-1.5 mt-1 px-1", isMine ? "justify-end" : "justify-start")}>
+                        <span className="text-[8px] font-bold text-muted-foreground/20 uppercase tracking-widest">{fmtTime(msg.sentAt)}</span>
                         {isMine && (
-                          msg.status === "sending" ? <Clock size={10} className="text-muted-foreground/20" /> :
-                          msg.status === "error" ? <AlertCircle size={10} className="text-destructive" /> :
-                          <CheckCheck size={11} className="text-foreground/20" />
+                          msg.status === "sending" ? <Clock size={8} className="text-muted-foreground/10" /> :
+                          msg.status === "error" ? <AlertCircle size={8} className="text-destructive/50" /> :
+                          <CheckCheck size={9} className="text-emerald-500/20" />
                         )}
                       </div>
                     )}
@@ -162,22 +164,22 @@ export function ChatArea(props: ChatAreaProps) {
       </div>
 
       <div className="p-6 pt-2">
-        <div className="relative flex items-end gap-2 bg-secondary/30 rounded-2xl border border-white/5 p-2 focus-within:border-white/10 transition-all">
+        <div className="relative flex items-end gap-2 bg-white/[0.02] rounded-xl border border-white/5 p-1.5 focus-within:border-white/10 transition-all">
           <textarea
             ref={inputRef} value={input}
             onChange={(e) => { setInput(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 160) + "px"; }}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
             placeholder="Authorized input only..." rows={1}
-            className="flex-1 bg-transparent border-none text-foreground text-[13px] resize-none leading-relaxed max-h-[160px] min-h-[40px] overflow-y-auto px-4 py-3 outline-none placeholder:text-muted-foreground/20 custom-scrollbar"
+            className="flex-1 bg-transparent border-none text-foreground text-[12px] resize-none leading-relaxed max-h-[160px] min-h-[40px] overflow-y-auto px-4 py-2.5 outline-none placeholder:text-muted-foreground/10 custom-scrollbar"
           />
           <button
             onClick={handleSend} disabled={!input.trim() || sending}
             className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all",
-              input.trim() ? "bg-foreground text-background shadow-xl hover:scale-105" : "bg-white/5 text-muted-foreground/20 cursor-default"
+              "w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all",
+              input.trim() ? "bg-foreground text-background shadow-lg hover:opacity-90" : "bg-white/[0.02] text-muted-foreground/10 cursor-default"
             )}
           >
-            {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+            {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
           </button>
         </div>
         <div className="flex items-center gap-2 mt-2 px-4 opacity-10">

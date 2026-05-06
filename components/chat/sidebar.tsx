@@ -50,14 +50,14 @@ export function Sidebar(props: SidebarProps) {
       <button
         onClick={() => setActiveTab(id)}
         className={cn(
-          "flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 group relative w-full",
-          isActive ? "bg-white/[0.08] text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+          "flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group relative w-full",
+          isActive ? "bg-white/[0.04] text-foreground" : "text-muted-foreground/60 hover:text-foreground hover:bg-white/[0.02]",
           isCollapsed ? "justify-center" : "justify-start"
         )}
         title={isCollapsed ? label : undefined}
       >
-        <Icon size={isActive ? 20 : 18} className={cn(isActive ? "opacity-100" : "opacity-40 group-hover:opacity-100")} />
-        {!isCollapsed && <span className="text-[12px] font-bold uppercase tracking-[0.2em]">{label}</span>}
+        <Icon size={isActive ? 18 : 16} className={cn(isActive ? "opacity-100" : "opacity-30 group-hover:opacity-100")} />
+        {!isCollapsed && <span className="text-[11px] font-bold uppercase tracking-[0.2em]">{label}</span>}
       </button>
     );
   };
@@ -129,7 +129,7 @@ export function Sidebar(props: SidebarProps) {
                     <input
                       value={searchQ} onChange={(e) => handleSearchChange(e.target.value)} onFocus={() => setShowSearch(true)}
                       placeholder="Search..."
-                      className="w-full bg-secondary/30 border border-white/5 rounded-xl py-2.5 pl-9 pr-8 text-foreground text-[12px] outline-none transition-all focus:border-white/10 placeholder:text-muted-foreground/20"
+                      className="w-full bg-white/[0.02] border border-white/5 rounded-lg py-2 pl-9 pr-8 text-foreground text-[11px] outline-none transition-all focus:border-white/10 placeholder:text-muted-foreground/10"
                     />
                     {searchQ && (
                       <button onClick={() => { setSearchQ(""); setSearchResults([]); setShowSearch(false); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/30 hover:text-foreground">
@@ -144,7 +144,7 @@ export function Sidebar(props: SidebarProps) {
               <div className="flex-1 overflow-y-auto px-2 space-y-1 custom-scrollbar">
                 {showSearch && searchQ ? (
                   <>
-                    {!isCollapsed && <div className="px-4 py-2 text-[10px] text-muted-foreground font-bold tracking-[0.2em] uppercase">Found</div>}
+                    {!isCollapsed && <div className="px-4 py-2 text-[9px] text-muted-foreground/30 font-bold tracking-[0.25em] uppercase">Found</div>}
                     {searching ? (
                       <div className="p-5 flex justify-center"><Loader2 size={18} className="text-muted-foreground/20 animate-spin" /></div>
                     ) : searchResults.length === 0 ? (
@@ -172,7 +172,7 @@ export function Sidebar(props: SidebarProps) {
                   </>
                 ) : (
                   <>
-                    {!isCollapsed && <div className="px-4 py-2 text-[10px] text-muted-foreground font-bold tracking-[0.2em] uppercase">Messages</div>}
+                    {!isCollapsed && <div className="px-4 py-2 text-[9px] text-muted-foreground/30 font-bold tracking-[0.25em] uppercase">Messages</div>}
                     {convos.length === 0 ? (
                       !isCollapsed && (
                         <div className="p-8 text-center text-muted-foreground/20 space-y-3">
@@ -189,8 +189,8 @@ export function Sidebar(props: SidebarProps) {
                             key={c.user_id}
                             onClick={() => { selectConvo(c); setIsMobileOpen(false); }}
                             className={cn(
-                              "relative group rounded-xl p-2 flex items-center gap-3 cursor-pointer transition-all",
-                              isActive ? "bg-white/5" : "hover:bg-white/5",
+                              "relative group rounded-lg p-2 flex items-center gap-3 cursor-pointer transition-all",
+                              isActive ? "bg-white/[0.03]" : "hover:bg-white/[0.02]",
                               isCollapsed ? "justify-center" : "px-3"
                             )}
                           >
@@ -201,8 +201,8 @@ export function Sidebar(props: SidebarProps) {
                                   <span className={cn("font-bold text-[12px] uppercase tracking-wider", isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>{c.display_name}</span>
                                   <span className="text-[9px] text-muted-foreground/30 font-medium">{fmtTime(c.last_message_at)}</span>
                                 </div>
-                                <div className="text-[11px] text-muted-foreground/50 truncate tracking-tight">
-                                  {lastMsg ? (lastMsg.isMine ? "OUT: " + lastMsg.text : "IN: " + lastMsg.text) : "READY"}
+                                <div className="text-[10px] text-muted-foreground/40 truncate tracking-tight font-medium">
+                                  {lastMsg ? (lastMsg.isMine ? "OUT: " + lastMsg.text : "IN: " + lastMsg.text) : "SECURE"}
                                 </div>
                               </div>
                             )}
@@ -242,28 +242,28 @@ export function Sidebar(props: SidebarProps) {
         {/* Footer */}
         <div className="p-4 mt-auto space-y-4">
           <div className={cn(
-            "p-3 rounded-2xl bg-secondary/20 flex items-center gap-3 transition-all",
+            "p-2.5 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-3 transition-all",
             isCollapsed ? "justify-center" : ""
           )}>
             <div className="relative">
-              <Avatar name={user?.display_name} size={28} />
+              <Avatar name={user?.display_name} size={24} />
               <div className={cn(
-                "absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-background",
+                "absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full border border-background",
                 wsStatus === "connected" ? "bg-emerald-500" : wsStatus === "connecting" ? "bg-amber-500" : "bg-red-500"
               )} />
             </div>
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <div className="text-[11px] font-bold truncate uppercase tracking-widest">{user?.display_name}</div>
-                <div className="text-[9px] text-muted-foreground/50 uppercase font-medium">Session Active</div>
+                <div className="text-[10px] font-bold truncate uppercase tracking-widest">{user?.display_name}</div>
+                <div className="text-[8px] text-muted-foreground/30 uppercase font-bold tracking-tighter">Authorized</div>
               </div>
             )}
             {!isCollapsed && (
               <button 
                 onClick={() => setShowLogoutModal(true)} 
-                className="p-1.5 hover:bg-white/10 rounded-lg text-muted-foreground hover:text-foreground transition-all"
+                className="p-1 hover:bg-white/10 rounded-md text-muted-foreground/40 hover:text-foreground transition-all"
               >
-                <LogOut size={14} />
+                <LogOut size={12} />
               </button>
             )}
           </div>
