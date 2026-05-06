@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VAULT
 
-## Getting Started
+VAULT is a high-security, end-to-end encrypted (E2EE) messaging environment designed for zero-knowledge communication. The platform utilizes the Web Crypto API for client-side encryption, ensuring that private keys and plaintext data never leave the user's local environment.
 
-First, run the development server:
+## Architecture
+
+The application follows a strictly modular architecture centered around a secure "Vault" dashboard.
+
+- **Client-Side Encryption**: AES-256-GCM for message payloads and ECDH P-256 for secure key exchange.
+- **Zero-Knowledge Persistence**: Messages are encrypted locally before being transmitted to the Koyeb-hosted backend via WebSocket or REST fallback.
+- **Volatile Identity**: Private keys are held in memory only, necessitating re-authentication for session restoration to prevent unauthorized access from persisted local storage.
+
+## Core Features
+
+- **Encrypted Messaging**: Real-time communication with cryptographic status indicators.
+- **Security Dashboard**: Live monitoring of encryption protocols, ephemeral key rotations, and protocol audit logs.
+- **Identity Profile**: Management of unique identity hashes and cryptographic fingerprints.
+- **Responsive Operative UI**: A monochromatic, technical interface optimized for high-performance and focus.
+
+## Technology Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Communication**: WebSocket (Primary), REST API (Fallback)
+- **Security**: Web Crypto API
+- **Icons**: Lucide React
+
+## Development
+
+### Prerequisites
+
+- Node.js 18.x or higher
+- pnpm / npm / yarn
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/xieumar/Vault.git
+cd vault
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Configuration
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Ensure your environment variables are configured for the Koyeb backend:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+NEXT_PUBLIC_API_URL=https://whisperbox.koyeb.app
+```
 
-## Learn More
+### Execution
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The application will be accessible at `http://localhost:3000`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Security Disclaimer
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+VAULT is an operative tool designed for secure communication. Ensure your Master Passphrase is kept secure; lost passphrases result in total loss of identity and message history as data is strictly zero-knowledge.
