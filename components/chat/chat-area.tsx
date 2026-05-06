@@ -130,7 +130,7 @@ export function ChatArea(props: ChatAreaProps) {
                   <div className={cn("max-w-[75%] lg:max-w-[60%]", isMine ? "items-end" : "items-start", "flex flex-col")}>
                     <div
                       className={cn(
-                        "px-3.5 py-2.5 text-[12.5px] leading-relaxed break-words transition-all border",
+                        "px-3.5 py-2.5 text-[12.5px] leading-relaxed break-all transition-all border",
                         isMine
                           ? msg.status === "error"
                             ? "bg-destructive/10 text-destructive border-destructive/20"
