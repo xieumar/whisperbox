@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { User } from "@/lib/types";
 import { CryptoService, base64Encode } from "@/lib/crypto";
 import { ApiService } from "@/lib/api";
+import { storeKeys, loadKeys, clearKeys } from "@/lib/key-store";
 
 export type AuthPhase = "auth" | "app";
 
@@ -47,6 +48,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("wb_user", JSON.stringify(data.user));
     localStorage.setItem("wb_at", data.access_token);
     localStorage.setItem("wb_rt", data.refresh_token);
+
+    // Persist CryptoKey objects in IndexedDB so they survive page refreshes
+    try { await storeKeys(priv, pub); } catch (e) { console.error("[AuthContext] Failed to persist keys", e); }
   }, []);
 
   useEffect(() => {
@@ -60,7 +64,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(JSON.parse(storedUser));
           setAccessToken(at);
           setRefreshToken(rt);
-          // Stay in "auth" phase because keys are missing
+
+          // Try to restore CryptoKey objects from IndexedDB
+          const keys = await loadKeys();
+          if (keys) {
+            setPrivateKey(keys.privateKey);
+            setPublicKey(keys.publicKey);
+            setPhase("app");
+          }
+          // If keys are missing, stay on "auth" so user can re-enter passphrase
         }
       } catch (e) {
         console.error("[AuthContext] Restore failed", e);
@@ -145,6 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPublicKey(null);
       setPhase("auth");
       localStorage.clear();
+      await clearKeys();
     }
   }, [accessToken, refreshToken]);
 

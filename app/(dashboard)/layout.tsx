@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Sidebar } from "@/components/chat/sidebar";
 import { SplashScreen } from "@/components/auth/splash-screen";
@@ -9,10 +9,16 @@ import { ChatProvider, useChat } from "@/lib/chat-context";
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const { user, phase: authPhase, initialized, logout } = useAuth();
+  const [minTimeMet, setMinTimeMet] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   
   const chat = useChat();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinTimeMet(true), 2000);
+    return () => clearTimeout(timer);
+  }, []);
   
   const onSelectConvo = async (convo: any) => {
     await chat.selectConvo(convo);
@@ -21,7 +27,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     }
   };
 
-  if (!initialized || authPhase === "auth") {
+  if (!minTimeMet || !initialized) {
+    return <SplashScreen loading={true} />;
+  }
+
+  if (authPhase === "auth") {
     return (
       <SplashScreen
         onGetStarted={() => router.push("/signup")}

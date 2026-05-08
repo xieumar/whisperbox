@@ -37,6 +37,7 @@
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
   --animate-deep-pulse: deep-pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-fade-up: fade-up 1s ease-out forwards;
 
   @keyframes accordion-down {
     from { height: 0; }
@@ -49,6 +50,10 @@
   @keyframes deep-pulse {
     0%, 100% { opacity: 0.03; transform: scale(1); }
     50% { opacity: 0.08; transform: scale(1.05); }
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }
 

@@ -4,11 +4,12 @@ import { Shield, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SplashScreenProps {
-  onGetStarted: () => void;
-  onRestore: () => void;
+  onGetStarted?: () => void;
+  onRestore?: () => void;
+  loading?: boolean;
 }
 
-export function SplashScreen({ onGetStarted, onRestore }: SplashScreenProps) {
+export function SplashScreen({ onGetStarted, onRestore, loading = false }: SplashScreenProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center opacity-[0.015] pointer-events-none">
@@ -34,22 +35,24 @@ export function SplashScreen({ onGetStarted, onRestore }: SplashScreenProps) {
           </div>
         </div>
 
-        <div className="w-full space-y-3 pt-6">
-          <button
-            onClick={onGetStarted}
-            className="w-full bg-white/[0.03] border border-white/10 text-foreground/80 rounded-full py-4 px-6 font-bold text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-foreground hover:text-background transition-all duration-500 group"
-          >
-            Initialize Handshake 
-            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </button>
-          
-          <button
-            onClick={onRestore}
-            className="w-full bg-transparent border border-white/5 text-muted-foreground/20 rounded-full py-4 px-6 font-bold text-[10px] uppercase tracking-[0.3em] hover:text-foreground/40 hover:bg-white/[0.01] transition-all duration-300"
-          >
-            Restore Session
-          </button>
-        </div>
+        {!loading && (
+          <div className="w-full space-y-3 pt-6 animate-fade-up">
+            <button
+              onClick={onGetStarted}
+              className="w-full bg-white/[0.03] border border-white/10 text-foreground/80 rounded-full py-4 px-6 font-bold text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-foreground hover:text-background transition-all duration-500 group"
+            >
+              Initialize Handshake 
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+            
+            <button
+              onClick={onRestore}
+              className="w-full bg-transparent border border-white/5 text-muted-foreground/20 rounded-full py-4 px-6 font-bold text-[10px] uppercase tracking-[0.3em] hover:text-foreground/40 hover:bg-white/[0.01] transition-all duration-300"
+            >
+              Restore Session
+            </button>
+          </div>
+        )}
 
       </div>
     </div>
